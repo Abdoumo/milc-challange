@@ -12,6 +12,7 @@ const { checkPostgresConnection, exportToPostgresSQL, PG_CONFIG } = require('./p
 const { seed } = require('./seed');
 
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 
@@ -718,10 +719,11 @@ function parseJSONSafe(str) {
   }
 }
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, HOST, () => {
   console.log(`=======================================================`);
   console.log(`🚀 MLIC CHALLENGE Production Server running at:`);
-  console.log(`👉 http://localhost:${PORT}`);
+  console.log(`👉 http://${HOST}:${PORT}`);
+  console.log(`👉 Accessible via IP: http://<YOUR_SERVER_IP>:${PORT}`);
   console.log(`👉 Engine: ${db.isPostgres ? 'PostgreSQL' : 'SQLite fallback (Set DATABASE_URL in .env for PostgreSQL)'}`);
   console.log(`👉 Confidential Submissions -> Direct to DB`);
   console.log(`👉 Attached Document Uploads -> /uploads/ Enabled`);
