@@ -84,3 +84,40 @@ CREATE INDEX IF NOT EXISTS idx_submissions_challenge ON submissions(challenge_id
 CREATE INDEX IF NOT EXISTS idx_submissions_user ON submissions(user_id);
 CREATE INDEX IF NOT EXISTS idx_evaluations_submission ON evaluations(submission_id);
 CREATE INDEX IF NOT EXISTS idx_evaluations_judge ON evaluations(judge_id);
+
+-- Initial Platform Settings
+INSERT INTO platform_settings (key, value) 
+VALUES ('competition_title', 'MLIC CHALLENGE 2026'), ('winners_announced', 'false')
+ON CONFLICT (key) DO NOTHING;
+
+-- Challenge #1 Seed: Omni AI Automation OS
+INSERT INTO challenges (id, title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant, is_active)
+VALUES (
+    'challenge_omni_ai_automation',
+    'منظومة الأتمتة الشاملة بالذكاء الاصطناعي (Omni AI Automation OS)',
+    'الذكاء الاصطناعي والأتمتة الذكية (AI & Automation)',
+    'ابتكار نظام متكامل لأتمتة المهام الرقمية والمكتبية (Word, Excel, PowerPoint)، أتمتة المواقع وتصفح الويب، جدولة المواعيد الذكية (Rendez-vous)، وتكامل واجهات الذكاء الاصطناعي (AI APIs) مع نظام اشتراكات ومدفوعات إلكترونية.',
+    'تهدر المؤسسات والشركات والأفراد آلاف الساعات سنوياً في تنفيذ الأعمال الرقمية المتكررة: إنشاء وتنسيق مستندات Word، معالجة الجداول وتحليل بيانات Excel المعقدة، تصميم عروض PowerPoint التقديمية، تعبئة النماذج والتنقل في المواقع الإلكترونية، وجدولة المواعيد وتنسيق اللقاءات (Rendez-vous).
+
+🎯 التحدي المطلوب من المشاركين:
+تصميم وبناء دراسة متكاملة لمنظومة أتمتة ذاتية (Autonomous AI Automation OS) تعمل كـ "وكيل عمل ذكي شامل" يقوم بتنفيذ كافة هذه المهام، مع تمكين كل عميل من ربط مفاتيح الذكاء الاصطناعي الخاصة به (Bring-Your-Own-API Key / Multi-Tenant AI Integration) لضمان الخصوصية والتحكم في التكاليف، مع توفير نموذج ربحي ونظام مدفوعات متكامل (Payment System).
+
+📋 المتطلبات الإلزامية في استمارة المشاركة:
+1. دراسة الجمهور المستهدف (Target Audience): تحديد القطاعات والشرائح المستفيدة وتحليل احتياجاتهم (Pain Points) والقيمة المقدمة.
+2. تحليل SWOT الرباعي: تحليل نقاط القوة، نقاط الضعف، الفرص السوقية، والتهديدات التقنية والتنافسية.
+3. دراسة الجدوى الفنية (Technical Feasibility): المعمارية التقنية، محركات الأتمتة لمستندات Office ومواقع الويب، ومستوى الجاهزية (TRL).
+4. دراسة الجدوى التشغيلية والتسويقية (Market & Operational Feasibility): قنوات التسويق والميزة التنافسية.
+5. دراسة الجدوى المالية ونظام المدفوعات (Financial Feasibility & Payment System):
+   - هيكل التكاليف (CAPEX & OPEX) والعائد على الاستثمار المتوقع (ROI).
+   - نموذج التسعير والفوترة وبوابات الدفع الإلكترونية المقترحة (Stripe / Local Payment Gateways / نظام الاشتراكات ونظام الأرصدة Pay-Per-Task).
+6. إرفاق ملف التوثيق والدراسة الكاملة (PDF / Word / PowerPoint / Excel) عبر خانة رفع الملفات.',
+    '• محرك ذكي لأتمتة مستندات Office (Word, Excel, PowerPoint) ببيانات ديناميكية دقيقة.
+• وكيل ويب (Web Agent) قادر على أتمتة تصفح المواقع وجدولة المواعيد واللقاءات (Rendez-vous) تلقائياً.
+• معمارية آمنة تتيح لكل عميل استخدام مفاتيح الـ AI الخاصة به مع عزل كامل للبيانات.
+• نظام مدفوعات وفواتير إلكترونية متكامل (بوابات الدفع، الاشتراكات الشهرية/السنوية، ونظام الرصيد).
+• دراسة جدوى اقتصادية وفنية شاملة مرفقة بملف توثيقي على المنصة.',
+    'الشركات والمؤسسات، مكاتب المحاسبة والاستشارات، العيادات والمراكز الخدمية، رواد الأعمال، المستقلون (Freelancers).',
+    'جائزة المركز الأول: احتضان تقني للمشروع + دعم تمويلي لتطوير النموذج الأولي + اعتماد رسمي من لجنة التحكيم.',
+    1
+)
+ON CONFLICT (id) DO NOTHING;

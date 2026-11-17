@@ -255,7 +255,8 @@ function updateFinancialCalc() {
     projected_year1_revenue: year1Rev,
     projected_year1_net_profit: year1Net,
     break_even_months: breakEvenMonths < 999 ? breakEvenMonths : 'N/A',
-    roi_percentage: roi
+    roi_percentage: roi,
+    payment_system: document.getElementById('fin-payment-system')?.value || state.form.feasibility.financial.payment_system || ''
   };
 
   const beEl = document.getElementById('calc-break-even');
@@ -396,6 +397,8 @@ async function postProposal() {
     team_structure: document.getElementById('feas-ops-team')?.value || '',
     implementation_phases: document.getElementById('feas-ops-phases')?.value || ''
   };
+
+  state.form.feasibility.financial.payment_system = document.getElementById('fin-payment-system')?.value || '';
 
   const payload = {
     challenge_id: challengeId,
@@ -1412,6 +1415,11 @@ function renderDetailModalContent(sub) {
           <div class="calc-item"><div class="val" style="color:#34d399;">$${(fin.projected_year1_net_profit || 0).toLocaleString()}</div><div class="lbl">صافي أرباح السنة الأولى</div></div>
           <div class="calc-item"><div class="val" style="color:#fbbf24;">${fin.roi_percentage || 0}%</div><div class="lbl">العائد على الاستثمار (ROI)</div></div>
         </div>
+        ${fin.payment_system ? `
+          <div style="margin-top:12px; padding:10px 14px; background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3); border-radius:8px; font-size:0.88rem;">
+            <strong>💳 ${state.lang === 'ar' ? 'نظام المدفوعات والفوترة:' : 'Payment & Billing System:'}</strong> ${fin.payment_system}
+          </div>
+        ` : ''}
       </div>
     </div>
 
