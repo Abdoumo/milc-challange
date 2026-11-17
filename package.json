@@ -1,0 +1,25 @@
+{
+  "name": "mlic-challenge",
+  "version": "1.0.0",
+  "description": "MLIC CHALLENGE - Feasibility Study, SWOT Analysis, Document Upload, Lajna Jury Evaluation and Winners Platform",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "seed": "node server/seed.js",
+    "create-admin": "node scripts/create_admin.js",
+    "export:pg": "node -e \"const { exportToPostgresSQL } = require('./server/postgres_client'); exportToPostgresSQL().then(sql => { require('fs').writeFileSync('database/mlic_export.sql', sql); console.log('PostgreSQL dump saved to database/mlic_export.sql'); });\""
+  },
+  "keywords": [
+    "agritech",
+    "feasibility-study",
+    "swot-analysis",
+    "lajna-jury",
+    "hackathon",
+    "postgresql"
+  ],
+  "author": "Agrivers Team",
+  "license": "ISC",
+  "dependencies": {
+    "pg": "^8.23.1"
+  }
+}

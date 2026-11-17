@@ -1,0 +1,86 @@
+-- PostgreSQL Schema for MLIC CHALLENGE Platform
+-- Production Schema: Confidential Feasibility Studies & Lajna Approvals
+
+CREATE TABLE IF NOT EXISTS users (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(32) NOT NULL DEFAULT 'participant', -- 'participant', 'lajna', 'admin'
+    organization VARCHAR(255) DEFAULT '',
+    bio TEXT DEFAULT '',
+    is_approved INT DEFAULT 1,                       -- Only Admin can approve Lajna (1=approved, 0=pending)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS challenges (
+    id VARCHAR(64) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    summary TEXT NOT NULL,
+    problem_statement TEXT NOT NULL,
+    expected_outcomes TEXT NOT NULL,
+    target_sectors TEXT NOT NULL,
+    reward_or_grant VARCHAR(255) DEFAULT '',
+    author_id VARCHAR(64) REFERENCES users(id) ON DELETE SET NULL,
+    is_active INT DEFAULT 1,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS submissions (
+    id VARCHAR(64) PRIMARY KEY,
+    challenge_id VARCHAR(64) REFERENCES challenges(id) ON DELETE CASCADE,
+    user_id VARCHAR(64) REFERENCES users(id) ON DELETE CASCADE,
+    author_name VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    pitch TEXT NOT NULL,
+    team_name VARCHAR(255) NOT NULL,
+    team_members TEXT NOT NULL,
+    target_audience JSONB NOT NULL,
+    swot JSONB NOT NULL,
+    feasibility JSONB NOT NULL,
+    document_path TEXT DEFAULT '',      -- Attached document path (/uploads/...)
+    document_name TEXT DEFAULT '',      -- Original filename (.pdf, .docx, etc.)
+    document_size INT DEFAULT 0,        -- File size in bytes
+    status VARCHAR(32) NOT NULL DEFAULT 'submitted', -- 'draft', 'submitted', 'shortlisted', 'winner'
+    likes_count INT DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS evaluations (
+    id VARCHAR(64) PRIMARY KEY,
+    submission_id VARCHAR(64) REFERENCES submissions(id) ON DELETE CASCADE,
+    judge_id VARCHAR(64) REFERENCES users(id) ON DELETE CASCADE,
+    judge_name VARCHAR(255) NOT NULL,
+    score_problem_audience INT NOT NULL CHECK (score_problem_audience BETWEEN 0 AND 20),
+    score_swot INT NOT NULL CHECK (score_swot BETWEEN 0 AND 20),
+    score_feasibility_tech INT NOT NULL CHECK (score_feasibility_tech BETWEEN 0 AND 25),
+    score_feasibility_financial INT NOT NULL CHECK (score_feasibility_financial BETWEEN 0 AND 25),
+    score_innovation INT NOT NULL CHECK (score_innovation BETWEEN 0 AND 10),
+    total_score INT NOT NULL CHECK (total_score BETWEEN 0 AND 100),
+    feedback TEXT DEFAULT '',
+    strengths_observed TEXT DEFAULT '',
+    recommendations TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (submission_id, judge_id)
+);
+
+CREATE TABLE IF NOT EXISTS votes (
+    id VARCHAR(64) PRIMARY KEY,
+    submission_id VARCHAR(64) REFERENCES submissions(id) ON DELETE CASCADE,
+    user_id VARCHAR(64) REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (submission_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS platform_settings (
+    key VARCHAR(64) PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_submissions_challenge ON submissions(challenge_id);
+CREATE INDEX IF NOT EXISTS idx_submissions_user ON submissions(user_id);
+CREATE INDEX IF NOT EXISTS idx_evaluations_submission ON evaluations(submission_id);
+CREATE INDEX IF NOT EXISTS idx_evaluations_judge ON evaluations(judge_id);

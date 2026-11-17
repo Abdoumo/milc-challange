@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MLIC CHALLENGE - دراسات الجدوى ولجنة التحكيم</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+
+  <!-- Main Sticky Navbar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <div class="brand" onclick="navigateTo('challenges')">
+        <div class="brand-icon">🏆</div>
+        <div class="brand-text">
+          <h1>MLIC CHALLENGE</h1>
+          <span>منصة الابتكار ودراسات الجدوى ولجنة التحكيم</span>
+        </div>
+      </div>
+
+      <nav>
+        <ul class="nav-links">
+          <li class="nav-item active" data-view="challenges">💡 أفكار المسابقة</li>
+          <li class="nav-item" data-view="submit">🚀 تقديم الجدوى والمستند</li>
+          <li class="nav-item" data-view="my-submission" id="nav-my-sub" style="display:none;">📂 دراستي المقدمة</li>
+          <li class="nav-item" data-view="lajna">
+            ⚖️ لجنة التحكيم
+            <span class="badge" id="nav-lajna-badge">0</span>
+          </li>
+          <li class="nav-item" data-view="admin-lajna" id="nav-admin-approvals" style="display:none;">
+            👥 اعتماد المحكمين
+            <span class="badge" id="nav-pending-badge" style="background:#f59e0b; display:none;">0</span>
+          </li>
+          <li class="nav-item" data-view="leaderboard">🏆 الفائزون والترتيب</li>
+          <li class="nav-item" data-view="db-info">🐘 PostgreSQL</li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="btn btn-outline btn-sm" onclick="toggleLanguage()" style="border-color:var(--border); color:var(--text-muted);">
+          🌐 EN / عربي
+        </button>
+        <div id="nav-user-container">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Header -->
+  <section class="hero">
+    <div class="container hero-content">
+      <div class="hero-pill">
+        <span>🏆 مسابقة MLIC CHALLENGE 2026</span> • <span>تحكيم حصري من لجنة الخبراء</span>
+      </div>
+      <h2>حوّل أفكار التحدي إلى دراسة جدوى متكاملة ومستند رسمي</h2>
+      <p>
+        سجّل دخولك في مسابقة MLIC CHALLENGE، اختر من الأفكار المطروحة، أعد دراسة الجدوى ومصفوفة SWOT وحدد جمهورك وأرفق ملف المستند (PDF / Doc). دراستك سرية ومحفوظة مباشرة في قاعدة البيانات للمراجعة الحصرية من قِبل لجنة التحكيم (Lajna)!
+      </p>
+
+      <div style="display:flex; justify-content:center; gap:16px;">
+        <button class="btn btn-primary btn-lg" onclick="navigateTo('submit')">
+          ✍️ إعداد دراسة الجدوى وإرفاق المستند
+        </button>
+        <button class="btn btn-secondary btn-lg" onclick="navigateTo('leaderboard')">
+          🏆 استعراض منصة الفائزين (Lajna Podium)
+        </button>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-value">2</div>
+          <div class="stat-label">أفكار تحدي قابلة للتعديل</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">📄 Doc / PDF</div>
+          <div class="stat-label">إرفاق المستندات متاح</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">🔒 DB Only</div>
+          <div class="stat-label">حفظ سري بقاعدة البيانات</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">⚖️ Lajna</div>
+          <div class="stat-label">تحكيم رسمي معتمد</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Views Container -->
+  <main class="main-view container">
+
+    <!-- 1. VIEW: CHALLENGES ("ill give the ideas") -->
+    <div id="view-challenges">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">💡 أفكار المشاريع والتحديات المطروحة</h2>
+          <p class="section-subtitle">الأفكار المعتمدة للمسابقة؛ اختر فكرة التحدي لبدء دراسة الجدوى وإرفاق مستندك</p>
+        </div>
+        <!-- Admin Add/Edit Idea Button -->
+        <div id="admin-ideas-bar" style="display:none;">
+          <button class="btn btn-primary btn-sm" onclick="openAddIdeaModal()">
+            ➕ إضافة فكرة جديدة (Admin)
+          </button>
+        </div>
+      </div>
+      <div class="challenges-grid" id="challenges-grid-content">
+        <!-- Rendered by app.js -->
+      </div>
+    </div>
+
+    <!-- 2. VIEW: SUBMISSION WIZARD (Direct to DB + Doc Upload) -->
+    <div id="view-submit" style="display:none;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">🚀 إعداد دراسة الجدوى وإرفاق المستند (Submission to DB)</h2>
+          <p class="section-subtitle">
+            🔒 دراستك محمية وسرية: تُحفظ مباشرة في قاعدة البيانات للمراجعة الحصرية من قبل لجنة التحكيم فقط
+          </p>
+        </div>
+      </div>
+
+      <div class="wizard-card">
+        <div class="wizard-steps" id="wizard-steps-container">
+          <!-- Steps rendered dynamically -->
+        </div>
+
+        <!-- STEP 1: Project Identity -->
+        <div id="wizard-step-1">
+          <h3 style="margin-bottom:16px;">1. بيانات المشروع والفكرة</h3>
+          
+          <div class="form-group">
+            <label class="form-label">فكرة التحدي المرتبطة *</label>
+            <select class="form-control" id="wizard-challenge-select">
+              <option value="">-- اختر الفكرة من التحديات المتاحة --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">اسم المشروع أو الشركة الناشئة *</label>
+            <input type="text" class="form-control" id="wiz-title" placeholder="مثال: SolarDrop للري الذكي">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">الملخص الموجز للمشروع (Pitch) *</label>
+            <textarea class="form-control" id="wiz-pitch" placeholder="اشرح الحل في جملتين إلى ثلاث جمل واضحة توضح القيمة المضافة..."></textarea>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label class="form-label">اسم الفريق</label>
+              <input type="text" class="form-control" id="wiz-team-name" placeholder="مثال: فريق الابتكار الزراعي">
+            </div>
+            <div class="form-group">
+              <label class="form-label">أسماء وتخصصات الأعضاء</label>
+              <input type="text" class="form-control" id="wiz-team-members" placeholder="سامي (هندسة زراعية)، سلمى (مالية)، عمر (برمجة)">
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+            <button class="btn btn-primary" onclick="setWizardStep(2)">التالي: دراسة الجمهور المستهدف ←</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Target Audience -->
+        <div id="wizard-step-2" style="display:none;">
+          <h3 style="margin-bottom:16px;">2. دراسة الجمهور المستهدف (Target Audience & Market Fit)</h3>
+          
+          <div class="form-group">
+            <label class="form-label">الشريحة الأساسية المستهدفة (Primary Segment) *</label>
+            <input type="text" class="form-control" id="aud-segment" placeholder="مثال: صغار ومتوسطو مزارعي الأشجار المثمرة والخضار">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">نقاط الألم والمشاكل الحرجة التي يعاني منها العميل (Customer Pain Points) *</label>
+            <textarea class="form-control" id="aud-pains" placeholder="مثال: ارتفاع تكاليف الوقود، هدر 40% من مياه السقي، تلف المحاصيل..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">القيمة المقترحة والحل الفريد (Unique Value Proposition) *</label>
+            <textarea class="form-control" id="aud-value" placeholder="لماذا سيختار العميل حلك تحديداً؟"></textarea>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="form-group">
+              <label class="form-label">تقدير حجم السوق (TAM / SAM / SOM)</label>
+              <input type="text" class="form-control" id="aud-market-size" placeholder="TAM: 100K مزرعة | SAM: 25K | SOM: 500">
+            </div>
+            <div class="form-group">
+              <label class="form-label">شخصية العميل المشتري (Buyer Persona)</label>
+              <input type="text" class="form-control" id="aud-persona" placeholder="الحاج بلقاسم (48 سنة)، يبحث عن حل سهل وبسيط يقلل كلفة الديزل">
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; margin-top:20px;">
+            <button class="btn btn-secondary" onclick="setWizardStep(1)">→ السابق</button>
+            <button class="btn btn-primary" onclick="setWizardStep(3)">التالي: تحليل SWOT الرباعي ←</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: SWOT Matrix -->
+        <div id="wizard-step-3" style="display:none;">
+          <h3 style="margin-bottom:8px;">3. مصفوفة تحليل سوات الرباعي (SWOT Analysis)</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+            أضف نقاط القوة والضعف (داخلية) والفرص والتهديدات (خارجية) لبناء تحليل استراتيجي يعتمده المحكّمون.
+          </p>
+
+          <div class="swot-grid">
+            <div class="swot-quadrant swot-s">
+              <div class="swot-header">
+                <h4 style="color:#34d399;">🟢 نقاط القوة (Strengths)</h4>
+              </div>
+              <ul class="swot-list" id="swot-list-strengths"></ul>
+              <div class="swot-add-row">
+                <input type="text" class="form-control" id="swot-input-strengths" placeholder="أضف نقطة قوة واضغط إضافة...">
+                <button class="btn btn-sm btn-primary" onclick="addSwotItem('strengths')">+</button>
+              </div>
+            </div>
+
+            <div class="swot-quadrant swot-w">
+              <div class="swot-header">
+                <h4 style="color:#fbbf24;">🟡 نقاط الضعف (Weaknesses)</h4>
+              </div>
+              <ul class="swot-list" id="swot-list-weaknesses"></ul>
+              <div class="swot-add-row">
+                <input type="text" class="form-control" id="swot-input-weaknesses" placeholder="أضف نقطة ضعف...">
+                <button class="btn btn-sm btn-secondary" onclick="addSwotItem('weaknesses')">+</button>
+              </div>
+            </div>
+
+            <div class="swot-quadrant swot-o">
+              <div class="swot-header">
+                <h4 style="color:#38bdf8;">🔵 الفرص السوقية (Opportunities)</h4>
+              </div>
+              <ul class="swot-list" id="swot-list-opportunities"></ul>
+              <div class="swot-add-row">
+                <input type="text" class="form-control" id="swot-input-opportunities" placeholder="أضف فرصة سوقية...">
+                <button class="btn btn-sm btn-primary" onclick="addSwotItem('opportunities')">+</button>
+              </div>
+            </div>
+
+            <div class="swot-quadrant swot-t">
+              <div class="swot-header">
+                <h4 style="color:#f87171;">🔴 التهديدات والمخاطر (Threats)</h4>
+              </div>
+              <ul class="swot-list" id="swot-list-threats"></ul>
+              <div class="swot-add-row">
+                <input type="text" class="form-control" id="swot-input-threats" placeholder="أضف تهديداً خارجياً...">
+                <button class="btn btn-sm btn-secondary" onclick="addSwotItem('threats')">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; margin-top:20px;">
+            <button class="btn btn-secondary" onclick="setWizardStep(2)">→ السابق</button>
+            <button class="btn btn-primary" onclick="setWizardStep(4)">التالي: دراسة الجدوى (Dirasat Jadwa) ←</button>
+          </div>
+        </div>
+
+        <!-- STEP 4: Feasibility Study (Dirasat Jadwa) -->
+        <div id="wizard-step-4" style="display:none;">
+          <h3 style="margin-bottom:8px;">4. دراسة الجدوى الشاملة (Dirasat Jadwa)</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+            الجدوى الفنية، التسويقية، والمالية مع حاسبة المؤشرات الاستثمارية الفورية.
+          </p>
+
+          <div class="feasibility-grid">
+            <div class="feasibility-box">
+              <h4>🛠️ الجدوى الفنية والتكنولوجية</h4>
+              <div class="form-group">
+                <label class="form-label">مستوى الجاهزية (TRL)</label>
+                <select class="form-control" id="feas-tech-trl">
+                  <option value="TRL 4: نموذج مخبري">TRL 4: نموذج أولي مخبري</option>
+                  <option value="TRL 5: نموذج تجريبي مكتمل" selected>TRL 5: نموذج تجريبي مكتمل</option>
+                  <option value="TRL 6: مختبر في الميدان">TRL 6: مختبر ومثبت في الميدان</option>
+                  <option value="TRL 7: جاهز للإنتاج">TRL 7: نموذج تجاري جاهز للإنتاج</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">المواصفات الفنية ومكونات الحل</label>
+                <textarea class="form-control" id="feas-tech-summary" placeholder="المعدات، الحساسات، الخوادم، البرمجيات المستخدمة..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">احتياجات البنية التحتية</label>
+                <input type="text" class="form-control" id="feas-tech-infra" placeholder="ورشة تجميع، سيرفر سحابي، خط فحص...">
+              </div>
+            </div>
+
+            <div class="feasibility-box">
+              <h4>🛍️ الجدوى التسويقية والتجارية</h4>
+              <div class="form-group">
+                <label class="form-label">حجم الطلب المتوقع في السوق</label>
+                <textarea class="form-control" id="feas-mkt-demand" placeholder="مدى حاجة المزارعين أو التجار ومعدل النمو السنوي..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">الميزة التنافسية وعناصر التفوق</label>
+                <input type="text" class="form-control" id="feas-mkt-edge" placeholder="السعر المنخفض، القرب الميداني، سهولة الاستخدام...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">قنوات التسويق والوصول للزبائن</label>
+                <input type="text" class="form-control" id="feas-mkt-channels" placeholder="التعاونيات الزراعية، المعارض، منصات التواصل...">
+              </div>
+            </div>
+
+            <!-- Financial -->
+            <div class="feasibility-box" style="grid-column:1/-1;">
+              <h4>💰 الجدوى المالية وحاسبة المؤشرات الاستثمارية</h4>
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:14px;">
+                <div class="form-group">
+                  <label class="form-label">رأس المال التأسيسي (CAPEX $)</label>
+                  <input type="number" class="form-control" id="fin-capex" value="18000" oninput="updateFinancialCalc()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">المصاريف التشغيلية الشهرية (OPEX $)</label>
+                  <input type="number" class="form-control" id="fin-opex" value="2500" oninput="updateFinancialCalc()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">المبيعات السنوية المتوقعة (وحدة)</label>
+                  <input type="number" class="form-control" id="fin-sales" value="60" oninput="updateFinancialCalc()">
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+                <div class="form-group">
+                  <label class="form-label">سعر البيع للوحدة ($)</label>
+                  <input type="number" class="form-control" id="fin-price" value="1400" oninput="updateFinancialCalc()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">كلفة إنتاج الوحدة المباشرة ($)</label>
+                  <input type="number" class="form-control" id="fin-cost" value="750" oninput="updateFinancialCalc()">
+                </div>
+              </div>
+
+              <div class="calc-result-box">
+                <div class="calc-item">
+                  <div class="val" id="calc-break-even">11 mo</div>
+                  <div class="lbl">نقطة التعادل المتوقعة (Break-Even)</div>
+                </div>
+                <div class="calc-item">
+                  <div class="val" id="calc-net-profit">$21,000</div>
+                  <div class="lbl">صافي الأرباح التقديري (السنة 1)</div>
+                </div>
+                <div class="calc-item">
+                  <div class="val" id="calc-roi">116%</div>
+                  <div class="lbl">العائد على الاستثمار التأسيسي (ROI)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Operational -->
+            <div class="feasibility-box" style="grid-column:1/-1;">
+              <h4>⚖️ الجدوى التشغيلية والقانونية</h4>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="form-group">
+                  <label class="form-label">التراخيص القانونية والموافقات</label>
+                  <input type="text" class="form-control" id="feas-ops-permits" placeholder="سجل تجاري، اعتماد سلامة، رخص الترددات...">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">الهيكل الإداري وفريق التشغيل</label>
+                  <input type="text" class="form-control" id="feas-ops-team" placeholder="مدير المشروع، مهندس صيانة، مسؤول تسويق...">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; margin-top:20px;">
+            <button class="btn btn-secondary" onclick="setWizardStep(3)">→ السابق</button>
+            <button class="btn btn-primary" onclick="setWizardStep(5)">التالي: إرفاق المستند والإرسال ←</button>
+          </div>
+        </div>
+
+        <!-- STEP 5: Attach Doc & Send to Database ("they can post doc") -->
+        <div id="wizard-step-5" style="display:none;">
+          <h3 style="margin-bottom:8px;">5. إرفاق مستند دراسة الجدوى والإرسال المباشر لقاعدة البيانات</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+            يمكنك إرفاق ملف دراسة الجدوى الكامل (Word Doc، PDF، عرض تقديمي PPTX، أو Excel). سيُحفظ المشروع والمستند في قاعدة البيانات لتحكيمه من قِبل اللجنة حصرياً.
+          </p>
+
+          <!-- Document Upload Box -->
+          <div class="form-group">
+            <label class="form-label">📄 إرفاق مستند الدراسة (Post Doc: PDF / Word / PPTX / Excel)</label>
+            <div class="upload-dropzone" onclick="document.getElementById('doc-file-input').click()">
+              <input type="file" id="doc-file-input" style="display:none;" accept=".pdf,.doc,.docx,.pptx,.xlsx,.zip" onchange="handleDocFileSelect(event)">
+              <div class="upload-icon">📁</div>
+              <div style="font-weight:700; margin-bottom:4px;">اضغط هنا لاختيار ملف المستند من جهازك</div>
+              <div style="font-size:0.8rem; color:var(--text-dim);">يدعم صيغ PDF, DOCX, DOC, PPTX, XLSX حتى 20 ميغابايت</div>
+            </div>
+            <div id="attached-doc-display"></div>
+          </div>
+
+          <div id="wizard-review-summary" style="margin-top:24px;"></div>
+
+          <div style="background:rgba(2,132,199,0.1); border:1px solid rgba(2,132,199,0.3); border-radius:12px; padding:16px; margin-top:24px; display:flex; align-items:center; gap:12px;">
+            <span style="font-size:1.8rem;">🔒</span>
+            <div style="font-size:0.88rem; color:#bae6fd;">
+              <strong>حفظ سري ومؤمن:</strong> لن يظهر مشروعك أو مستندك لأي متسابقين آخرين على الموقع. سيتم إرساله مباشرة لقاعدة البيانات ليطلع عليه أعضاء لجنة التحكيم (Lajna) لمنح الدرجات واختيار الفائزين.
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:28px;">
+            <button class="btn btn-secondary" onclick="setWizardStep(4)">→ السابق (تعديل البيانات)</button>
+            <button class="btn btn-primary btn-lg" onclick="postProposal()">
+              💾 إرسال وحفظ في قاعدة البيانات (Submit to DB)
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 3. VIEW: MY SUBMISSION (Participant Private Dashboard) -->
+    <div id="view-my-submission" style="display:none;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">📂 دراستي المقدمة ومستندي في قاعدة البيانات</h2>
+          <p class="section-subtitle">عرض دراسة الجدوى والمستند الذي قمت بحفظه، ومتابعة حالة المراجعة لدى لجنة التحكيم</p>
+        </div>
+        <div>
+          <button class="btn btn-primary btn-sm" onclick="navigateTo('submit')">+ تقديم دراسة جديدة</button>
+        </div>
+      </div>
+
+      <div id="my-submission-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- 4. VIEW: LAJNA (لجنة التحكيم - Exclusive Jury Review) -->
+    <div id="view-lajna" style="display:none;">
+      <div id="lajna-view-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- 5. VIEW: ADMIN LAJNA APPROVALS ("make the admin the only one can approve lajna") -->
+    <div id="view-admin-lajna" style="display:none;">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">👥 إدارة واعتماد أعضاء لجنة التحكيم (Lajna Approval Panel)</h2>
+          <p class="section-subtitle">صلاحية حصرية لمدير المسابقة (Admin): فحص واعتماد أو تجميد طلبات الانضمام للجنة التحكيم</p>
+        </div>
+      </div>
+
+      <div id="admin-lajna-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- 6. VIEW: LEADERBOARD & WINNERS PODIUM -->
+    <div id="view-leaderboard" style="display:none;">
+      <div id="leaderboard-view-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- 6. VIEW: DATABASE & POSTGRESQL -->
+    <div id="view-db-info" style="display:none;">
+      <div id="db-view-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: Add / Edit Idea ("ill give the ideas") -->
+  <div class="modal-overlay" id="idea-modal">
+    <div class="modal-content" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 id="modal-idea-heading" style="font-size:1.15rem;">💡 إدارة فكرة التحدي للمسابقة</h3>
+        <button class="modal-close" onclick="closeModal('idea-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modal-idea-id">
+        <div class="form-group">
+          <label class="form-label">عنوان فكرة المشروع / التحدي *</label>
+          <input type="text" class="form-control" id="modal-idea-title" placeholder="مثال: الفكرة 1: نظام التبريد الشمسي...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">التصنيف أو المجال</label>
+          <input type="text" class="form-control" id="modal-idea-category" placeholder="مثال: AgriTech, Clean Logistics...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">نبذة ملخصة عن الفكرة</label>
+          <textarea class="form-control" id="modal-idea-summary" placeholder="شرح مبسط للفكرة..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">المشكلة المطروحة والمطلوب حلها *</label>
+          <textarea class="form-control" id="modal-idea-problem" placeholder="صف المشكلة الحرجة التي يعاني منها المزارعون أو السوق..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">المخرجات والمستندات المتوقعة في دراسة الجدوى</label>
+          <textarea class="form-control" id="modal-idea-outcomes" placeholder="1. دراسة جدوى فنية ومالية\n2. ملف مستند PDF..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">المنحة أو الجائزة المرصودة للفكرة</label>
+          <input type="text" class="form-control" id="modal-idea-reward" placeholder="مثال: منحة 15,000$ + احتضان رسمي">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('idea-modal')">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveChallengeIdea()">💾 حفظ فكرة التحدي</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Auth (Sign In / Register) -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-content" style="max-width:460px;">
+      <div class="modal-header">
+        <div style="display:flex; gap:12px;">
+          <button class="btn btn-sm btn-outline active" id="auth-tab-login" onclick="openAuthModal('login')">تسجيل الدخول</button>
+          <button class="btn btn-sm btn-outline" id="auth-tab-reg" onclick="openAuthModal('register')">إنشاء حساب جديد</button>
+        </div>
+        <button class="modal-close" onclick="closeModal('auth-modal')">×</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="modal-login-form">
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني</label>
+            <input type="email" class="form-control" id="login-email" required placeholder="name@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">كلمة المرور</label>
+            <input type="password" class="form-control" id="login-password" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">تسجيل الدخول</button>
+        </form>
+
+        <form id="modal-register-form" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">الاسم الكامل *</label>
+            <input type="text" class="form-control" id="reg-name" required placeholder="مثال: سامي بوعلام">
+          </div>
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني *</label>
+            <input type="email" class="form-control" id="reg-email" required placeholder="sami@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">كلمة المرور *</label>
+            <input type="password" class="form-control" id="reg-password" required placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label class="form-label">الدور في المنصة *</label>
+            <select class="form-control" id="reg-role">
+              <option value="participant">رائد أعمال / متسابق (Participant)</option>
+              <option value="lajna">عضو لجنة تحكيم (Lajna Judge)</option>
+              <option value="admin">منظم المسابقة (Admin)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">المؤسسة / الفريق</label>
+            <input type="text" class="form-control" id="reg-org" placeholder="اسم الشركة أو التعاونية...">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">إنشاء الحساب</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Project Details (SWOT, Feasibility, Target Audience, Attached Doc) -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-content" style="max-width:880px;">
+      <div class="modal-header">
+        <h3 style="font-size:1.15rem;">تفاصيل دراسة الجدوى والمستند المحفوظ في قاعدة البيانات</h3>
+        <button class="modal-close" onclick="closeModal('detail-modal')">×</button>
+      </div>
+      <div class="modal-body" id="detail-modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('detail-modal')">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Lajna Scoring Rubric -->
+  <div class="modal-overlay" id="eval-modal">
+    <div class="modal-content" style="max-width:680px;">
+      <div class="modal-header">
+        <h3 style="font-size:1.15rem; color:#a78bfa;">⚖️ نموذج تحكيم دراسة الجدوى والمستند - لجنة التحكيم</h3>
+        <button class="modal-close" onclick="closeModal('eval-modal')">×</button>
+      </div>
+      <div class="modal-body" id="eval-modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('eval-modal')">إلغاء</button>
+        <button class="btn btn-lajna" onclick="submitLajnaEvaluation()">✓ اعتماد وحفظ تقييم اللجنة في قاعدة البيانات</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>🏆 <strong>MLIC CHALLENGE</strong> © 2026 - منصة تحدي دراسات الجدوى وسوات مع تحكيم اللجنة ولائحة الفائزين</div>
+      <div style="color:var(--text-muted); font-size:0.8rem;">
+        🔒 Confidential Database Storage • PostgreSQL Ready
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
