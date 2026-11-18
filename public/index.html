@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
@@ -18,17 +18,22 @@
       <!-- Brand / Logo -->
       <div class="brand" onclick="navigateTo('challenges')">
         <div class="brand-emblem">
-          <svg class="brand-logo-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg class="brand-logo-svg" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="mlicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#10b981" />
                 <stop offset="50%" stop-color="#38bdf8" />
-                <stop offset="100%" stop-color="#8b5cf6" />
+                <stop offset="100%" stop-color="#818cf8" />
+              </linearGradient>
+              <linearGradient id="mlicBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#1e293b" />
+                <stop offset="100%" stop-color="#090d16" />
               </linearGradient>
             </defs>
-            <rect width="32" height="32" rx="9" fill="#0f172a" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
-            <path d="M7 23V9L16 16L25 9V23" stroke="url(#mlicGrad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="16" cy="16" r="2.2" fill="#38bdf8"/>
+            <rect width="36" height="36" rx="10" fill="url(#mlicBg)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2"/>
+            <path d="M8 26V11L18 19L28 11V26" stroke="url(#mlicGrad)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="18" cy="19" r="2.4" fill="#38bdf8"/>
+            <circle cx="18" cy="8.5" r="1.8" fill="#10b981"/>
           </svg>
         </div>
         <div class="brand-info">

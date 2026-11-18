@@ -689,12 +689,15 @@ function renderNavbar() {
     const initial = (state.currentUser.name || 'U').charAt(0).toUpperCase();
     const role = state.currentUser.role;
     const roleBg = role === 'admin' ? 'role-admin-bg' : role === 'lajna' ? 'role-lajna-bg' : 'role-participant-bg';
+    const roleLabel = state.lang === 'ar' 
+      ? (role === 'admin' ? 'المنظم' : role === 'lajna' ? 'محكّم' : 'متسابق')
+      : role;
     userContainer.innerHTML = `
       <div class="user-pill" onclick="openAuthModal('profile')" title="${state.currentUser.name} (${role})">
         <div class="user-avatar-circle ${roleBg}">${initial}</div>
         <div class="user-pill-info">
           <span class="user-pill-name">${state.currentUser.name.split(' ')[0]}</span>
-          <span class="role-badge role-${role}">${role}</span>
+          <span class="role-badge role-${role}">${roleLabel}</span>
         </div>
       </div>
       <button class="nav-logout-btn" onclick="logout()" title="${state.lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}">
