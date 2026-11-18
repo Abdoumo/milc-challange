@@ -685,7 +685,10 @@ const server = http.createServer(async (req, res) => {
             res.writeHead(404, { 'Content-Type': 'text/plain' });
             return res.end('File not found');
           }
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.writeHead(200, { 
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache, must-revalidate'
+          });
           res.end(content);
         });
         return;
@@ -699,7 +702,10 @@ const server = http.createServer(async (req, res) => {
           res.writeHead(500, { 'Content-Type': 'text/plain' });
           return res.end('Server Error reading file');
         }
-        res.writeHead(200, { 'Content-Type': contentType });
+        res.writeHead(200, { 
+          'Content-Type': contentType,
+          'Cache-Control': 'no-cache, must-revalidate'
+        });
         res.end(content);
       });
     });
