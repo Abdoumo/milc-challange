@@ -624,6 +624,35 @@ function renderNavbar() {
   const userContainer = document.getElementById('nav-user-container');
   if (!userContainer) return;
 
+  // Update Nav Labels for Language
+  const navLabels = {
+    'challenges': state.lang === 'ar' ? 'الأفكار المطروحة' : 'Challenges',
+    'submit': state.lang === 'ar' ? 'تقديم دراسة' : 'Submit Study',
+    'my-sub': state.lang === 'ar' ? 'دراستي' : 'My Proposal',
+    'lajna': state.lang === 'ar' ? 'لجنة التحكيم' : 'Jury Suite',
+    'leaderboard': state.lang === 'ar' ? 'الفائزون' : 'Leaderboard',
+    'admin-approvals': state.lang === 'ar' ? 'اعتماد المحكمين' : 'Approvals'
+  };
+
+  for (const [key, text] of Object.entries(navLabels)) {
+    const el = document.getElementById(`nav-label-${key}`);
+    if (el) el.textContent = text;
+  }
+
+  // Update Tagline
+  const taglineEl = document.getElementById('brand-tagline-text');
+  if (taglineEl) {
+    taglineEl.textContent = state.lang === 'ar' ? 'منصة دراسات الجدوى والتحكيم الرسمي' : 'Feasibility & Jury Platform';
+  }
+
+  // Language toggle pill active state
+  const arLabel = document.getElementById('lang-ar-label');
+  const enLabel = document.getElementById('lang-en-label');
+  if (arLabel && enLabel) {
+    arLabel.classList.toggle('active', state.lang === 'ar');
+    enLabel.classList.toggle('active', state.lang === 'en');
+  }
+
   document.querySelectorAll('.nav-item').forEach(el => {
     const view = el.getAttribute('data-view');
     if (view === state.activeView) {
@@ -657,22 +686,29 @@ function renderNavbar() {
   }
 
   if (state.currentUser) {
+    const initial = (state.currentUser.name || 'U').charAt(0).toUpperCase();
+    const role = state.currentUser.role;
+    const roleBg = role === 'admin' ? 'role-admin-bg' : role === 'lajna' ? 'role-lajna-bg' : 'role-participant-bg';
     userContainer.innerHTML = `
-      <div class="user-badge" onclick="openAuthModal('profile')">
-        <span class="role-tag role-${state.currentUser.role}">${state.currentUser.role}</span>
-        <span style="font-weight:600;">${state.currentUser.name}</span>
+      <div class="user-pill" onclick="openAuthModal('profile')" title="${state.currentUser.name} (${role})">
+        <div class="user-avatar-circle ${roleBg}">${initial}</div>
+        <div class="user-pill-info">
+          <span class="user-pill-name">${state.currentUser.name.split(' ')[0]}</span>
+          <span class="role-badge role-${role}">${role}</span>
+        </div>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="logout()">
-        ${state.lang === 'ar' ? 'خروج' : 'Logout'}
+      <button class="nav-logout-btn" onclick="logout()" title="${state.lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
       </button>
     `;
   } else {
     userContainer.innerHTML = `
-      <button class="btn btn-secondary btn-sm" onclick="openAuthModal('login')">
+      <button class="nav-btn-ghost" onclick="openAuthModal('login')">
         ${state.lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
       </button>
-      <button class="btn btn-primary btn-sm" onclick="openAuthModal('register')">
-        ${state.lang === 'ar' ? 'إنشاء حساب' : 'Register'}
+      <button class="nav-btn-glow" onclick="openAuthModal('register')">
+        <span>${state.lang === 'ar' ? 'إنشاء حساب' : 'Register'}</span>
+        <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
       </button>
     `;
   }

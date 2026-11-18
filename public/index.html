@@ -14,37 +14,80 @@
 
   <!-- Main Sticky Navbar -->
   <header class="navbar">
-    <div class="container nav-container">
+    <div class="nav-container">
+      <!-- Brand / Logo -->
       <div class="brand" onclick="navigateTo('challenges')">
-        <div class="brand-icon">🏆</div>
-        <div class="brand-text">
-          <h1>MLIC CHALLENGE</h1>
-          <span>منصة الابتكار ودراسات الجدوى ولجنة التحكيم</span>
+        <div class="brand-emblem">
+          <svg class="brand-logo-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="mlicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#10b981" />
+                <stop offset="50%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#8b5cf6" />
+              </linearGradient>
+            </defs>
+            <rect width="32" height="32" rx="9" fill="#0f172a" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+            <path d="M7 23V9L16 16L25 9V23" stroke="url(#mlicGrad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="16" cy="16" r="2.2" fill="#38bdf8"/>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <div class="brand-title-row">
+            <span class="brand-name">MLIC</span>
+            <span class="brand-edition">CHALLENGE</span>
+            <span class="brand-badge">2026</span>
+          </div>
+          <span class="brand-tagline" id="brand-tagline-text">منصة الجدوى والتحكيم الرسمي</span>
         </div>
       </div>
 
-      <nav>
-        <ul class="nav-links">
-          <li class="nav-item active" data-view="challenges">💡 أفكار المسابقة</li>
-          <li class="nav-item" data-view="submit">🚀 تقديم الجدوى والمستند</li>
-          <li class="nav-item" data-view="my-submission" id="nav-my-sub" style="display:none;">📂 دراستي المقدمة</li>
+      <!-- Center Navigation: Floating Segmented Capsule -->
+      <nav class="nav-menu">
+        <ul class="nav-pill-group">
+          <li class="nav-item active" data-view="challenges">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 01-1.92-3.5A5.002 5.002 0 0115 10c0 1.5-.7 2.8-1.92 3.5A4.002 4.002 0 0112 14z"/></svg>
+            <span id="nav-label-challenges">الأفكار المطروحة</span>
+          </li>
+          <li class="nav-item" data-view="submit">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/></svg>
+            <span id="nav-label-submit">تقديم دراسة</span>
+          </li>
+          <li class="nav-item" data-view="my-submission" id="nav-my-sub" style="display:none;">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+            <span id="nav-label-my-sub">دراستي</span>
+          </li>
           <li class="nav-item" data-view="lajna">
-            ⚖️ لجنة التحكيم
-            <span class="badge" id="nav-lajna-badge">0</span>
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+            <span id="nav-label-lajna">لجنة التحكيم</span>
+            <span class="nav-counter" id="nav-lajna-badge">0</span>
           </li>
-          <li class="nav-item" data-view="admin-lajna" id="nav-admin-approvals" style="display:none;">
-            👥 اعتماد المحكمين
-            <span class="badge" id="nav-pending-badge" style="background:#f59e0b; display:none;">0</span>
+          <li class="nav-item" data-view="leaderboard">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2 5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z" clip-rule="evenodd"/></svg>
+            <span id="nav-label-leaderboard">الفائزون</span>
           </li>
-          <li class="nav-item" data-view="leaderboard">🏆 الفائزون والترتيب</li>
-          <li class="nav-item" data-view="db-info">🐘 PostgreSQL</li>
+          <li class="nav-item nav-item-admin" data-view="admin-lajna" id="nav-admin-approvals" style="display:none;">
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+            <span id="nav-label-admin-approvals">اعتماد المحكمين</span>
+            <span class="nav-counter counter-amber" id="nav-pending-badge" style="display:none;">0</span>
+          </li>
         </ul>
       </nav>
 
+      <!-- Right Nav Controls -->
       <div class="nav-actions">
-        <button class="btn btn-outline btn-sm" onclick="toggleLanguage()" style="border-color:var(--border); color:var(--text-muted);">
-          🌐 EN / عربي
+        <!-- Live Database Status Pill -->
+        <button class="nav-db-pill" onclick="navigateTo('db-info')" title="حالة قاعدة البيانات والتخزين السري">
+          <span class="pulse-dot"></span>
+          <span class="db-pill-label">PostgreSQL</span>
         </button>
+
+        <!-- Segmented Language Switcher -->
+        <div class="lang-segmented-control" onclick="toggleLanguage()" title="تبديل اللغة / Switch Language">
+          <span class="lang-opt" id="lang-ar-label">عربي</span>
+          <span class="lang-opt" id="lang-en-label">EN</span>
+        </div>
+
+        <!-- User Authentication & Profile Pill -->
         <div id="nav-user-container">
           <!-- Populated dynamically by app.js -->
         </div>
