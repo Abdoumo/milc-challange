@@ -526,7 +526,7 @@
       </div>
 
       <div class="modal-body">
-        <form id="modal-login-form">
+        <form id="modal-login-form" onsubmit="handleLoginSubmit(event); return false;">
           <div class="form-group">
             <label class="form-label">البريد الإلكتروني</label>
             <input type="email" class="form-control" id="login-email" required placeholder="name@example.com">
@@ -538,7 +538,7 @@
           <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">تسجيل الدخول</button>
         </form>
 
-        <form id="modal-register-form" style="display:none;">
+        <form id="modal-register-form" style="display:none;" onsubmit="handleRegisterSubmit(event); return false;">
           <div class="form-group">
             <label class="form-label">الاسم الكامل *</label>
             <input type="text" class="form-control" id="reg-name" required placeholder="مثال: سامي بوعلام">

@@ -232,6 +232,23 @@ async function initDatabase() {
   } catch (err) {
     console.error('[Database Challenge Seed]', err.message);
   }
+
+  // Ensure default Admin exists if no admin exists
+  try {
+    const adminUser = await get("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
+    if (!adminUser) {
+      const { hashPassword } = require('./auth');
+      const passHash = hashPassword('admin123456');
+      const now = new Date().toISOString();
+      await run(`
+        INSERT INTO users (id, name, email, password_hash, role, organization, bio, is_approved, created_at)
+        VALUES (?, ?, ?, ?, 'admin', 'MLIC Organizing Committee', 'المشرف العام على مسابقة MLIC CHALLENGE', 1, ?)
+      `, ['user_admin_default', 'Admin MLIC', 'admin@mlic.com', passHash, now]);
+      console.log('[Database] Default Admin created: admin@mlic.com / admin123456');
+    }
+  } catch (err) {
+    console.error('[Database Admin Seed]', err.message);
+  }
 }
 
 module.exports = {

@@ -121,3 +121,17 @@ VALUES (
     1
 )
 ON CONFLICT (id) DO NOTHING;
+
+-- Initial Admin Seed (default: admin@mlic.com / admin123456)
+INSERT INTO users (id, name, email, password_hash, role, organization, bio, is_approved)
+VALUES (
+    'user_admin_default',
+    'Admin MLIC',
+    'admin@mlic.com',
+    '6a58dc133737adb1a0508a5846da4059:790058edca1c4339e8906587225a70e5b27101b3910b9c0c6c75d996ba88d378dfab18bfa27eb6aca987cff2544bf252f0bc59af1d2d2cd348772421960b44dd',
+    'admin',
+    'MLIC Organizing Committee',
+    'المشرف العام على مسابقة MLIC CHALLENGE',
+    1
+)
+ON CONFLICT (email) DO NOTHING;

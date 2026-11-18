@@ -1555,6 +1555,77 @@ function updateRubricTotal() {
   if (elTotal) elTotal.innerHTML = `${total}<span style="font-size:1.2rem; color:var(--text-dim);">/100</span>`;
 }
 
+async function handleLoginSubmit(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const emailInput = document.getElementById('login-email');
+  const passInput = document.getElementById('login-password');
+  const email = emailInput ? emailInput.value.trim() : '';
+  const pass = passInput ? passInput.value : '';
+
+  if (!email || !pass) {
+    showToast(state.lang === 'ar' ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور' : 'Email and password are required', 'error');
+    return false;
+  }
+
+  try {
+    const data = await api('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password: pass })
+    });
+    state.token = data.token;
+    state.currentUser = data.user;
+    state.isLajnaOrAdmin = data.user.role === 'lajna' || data.user.role === 'admin';
+    localStorage.setItem('mlic_token', data.token);
+    localStorage.setItem('agrivers_token', data.token);
+    showToast(state.lang === 'ar' ? `مرحباً بك، ${data.user.name}!` : `Welcome back, ${data.user.name}!`, 'success');
+    closeModal('auth-modal');
+    await loadInitialData();
+    renderApp();
+  } catch (err) {
+    console.error('Login error:', err);
+  }
+  return false;
+}
+
+async function handleRegisterSubmit(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const name = document.getElementById('reg-name')?.value.trim();
+  const email = document.getElementById('reg-email')?.value.trim();
+  const pass = document.getElementById('reg-password')?.value;
+  const role = document.getElementById('reg-role')?.value || 'participant';
+  const org = document.getElementById('reg-org')?.value.trim() || '';
+
+  if (!name || !email || !pass) {
+    showToast(state.lang === 'ar' ? 'يرجى تعبئة الحقول الإلزامية' : 'All required fields must be filled', 'error');
+    return false;
+  }
+
+  try {
+    const data = await api('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password: pass, role, organization: org })
+    });
+    state.token = data.token;
+    state.currentUser = data.user;
+    state.isLajnaOrAdmin = data.user.role === 'lajna' || data.user.role === 'admin';
+    localStorage.setItem('mlic_token', data.token);
+    localStorage.setItem('agrivers_token', data.token);
+    showToast(data.message || 'Account created successfully!', 'success');
+    closeModal('auth-modal');
+    await loadInitialData();
+    renderApp();
+  } catch (err) {
+    console.error('Register error:', err);
+  }
+  return false;
+}
+
 // Setup Event Listeners
 function setupEventListeners() {
   document.querySelectorAll('.nav-item').forEach(item => {
@@ -1564,51 +1635,9 @@ function setupEventListeners() {
     });
   });
 
-  document.getElementById('form-login')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const pass = document.getElementById('login-password').value;
-    try {
-      const data = await api('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password: pass })
-      });
-      state.token = data.token;
-      state.currentUser = data.user;
-      state.isLajnaOrAdmin = data.user.role === 'lajna' || data.user.role === 'admin';
-      localStorage.setItem('agrivers_token', data.token);
-      showToast(`Welcome back, ${data.user.name}!`, 'success');
-      closeModal('auth-modal');
-      await loadInitialData();
-      renderApp();
-    } catch (err) {
-      console.error(err);
-    }
-  });
+  const loginForm = document.getElementById('modal-login-form') || document.getElementById('form-login');
+  loginForm?.addEventListener('submit', handleLoginSubmit);
 
-  document.getElementById('form-register')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('reg-name').value;
-    const email = document.getElementById('reg-email').value;
-    const pass = document.getElementById('reg-password').value;
-    const role = document.getElementById('reg-role').value;
-    const org = document.getElementById('reg-org').value;
-
-    try {
-      const data = await api('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password: pass, role, organization: org })
-      });
-      state.token = data.token;
-      state.currentUser = data.user;
-      state.isLajnaOrAdmin = data.user.role === 'lajna' || data.user.role === 'admin';
-      localStorage.setItem('agrivers_token', data.token);
-      showToast(`Account registered as ${data.user.role}!`, 'success');
-      closeModal('auth-modal');
-      await loadInitialData();
-      renderApp();
-    } catch (err) {
-      console.error(err);
-    }
-  });
+  const regForm = document.getElementById('modal-register-form') || document.getElementById('form-register');
+  regForm?.addEventListener('submit', handleRegisterSubmit);
 }
