@@ -189,6 +189,7 @@ async function logout() {
 
 function navigateTo(view) {
   state.activeView = view;
+  toggleMobileMenu(false);
   window.scrollTo({ top: 0, behavior: 'smooth' });
   renderApp();
 }
@@ -197,6 +198,13 @@ function setWizardStep(step) {
   if (step < 1 || step > 5) return;
   state.wizardStep = step;
   renderSubmissionWizard();
+  const wizCard = document.querySelector('#view-submit .wizard-card');
+  if (wizCard) {
+    const rect = wizCard.getBoundingClientRect();
+    if (rect.top < 70 || rect.top > window.innerHeight * 0.6) {
+      wizCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 }
 
 function selectChallengeForSubmission(challengeId) {
@@ -685,6 +693,16 @@ function renderNavbar() {
     mySubNav.style.display = state.currentUser ? 'flex' : 'none';
   }
 
+  // Update mobile drawer DB status label
+  const mobileDbLabel = document.getElementById('mobile-db-label');
+  if (mobileDbLabel) {
+    mobileDbLabel.textContent = state.lang === 'ar'
+      ? 'حالة قاعدة البيانات (PostgreSQL)'
+      : 'Database Status (PostgreSQL)';
+  }
+
+  const mobileUserDrawer = document.getElementById('mobile-drawer-user');
+
   if (state.currentUser) {
     const initial = (state.currentUser.name || 'U').charAt(0).toUpperCase();
     const role = state.currentUser.role;
@@ -704,6 +722,23 @@ function renderNavbar() {
         <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
       </button>
     `;
+    if (mobileUserDrawer) {
+      mobileUserDrawer.innerHTML = `
+        <div class="mobile-user-card">
+          <div class="mobile-user-main" onclick="openAuthModal('profile'); toggleMobileMenu(false);">
+            <div class="user-avatar-circle ${roleBg}">${initial}</div>
+            <div class="mobile-user-text">
+              <span class="mobile-user-name">${state.currentUser.name}</span>
+              <span class="role-badge role-${role}">${roleLabel}</span>
+            </div>
+          </div>
+          <button type="button" class="mobile-logout-btn" onclick="logout(); toggleMobileMenu(false);">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
+            <span>${state.lang === 'ar' ? 'خروج' : 'Logout'}</span>
+          </button>
+        </div>
+      `;
+    }
   } else {
     userContainer.innerHTML = `
       <button class="nav-btn-ghost" onclick="openAuthModal('login')">
@@ -714,6 +749,18 @@ function renderNavbar() {
         <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
       </button>
     `;
+    if (mobileUserDrawer) {
+      mobileUserDrawer.innerHTML = `
+        <div class="mobile-auth-actions">
+          <button type="button" class="btn btn-secondary btn-sm mobile-auth-btn" onclick="openAuthModal('login'); toggleMobileMenu(false);">
+            ${state.lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+          </button>
+          <button type="button" class="btn btn-primary btn-sm mobile-auth-btn" onclick="openAuthModal('register'); toggleMobileMenu(false);">
+            ${state.lang === 'ar' ? 'إنشاء حساب جديد' : 'Create Account'}
+          </button>
+        </div>
+      `;
+    }
   }
 }
 
@@ -721,6 +768,10 @@ function renderNavbar() {
 function renderChallengesView() {
   const grid = document.getElementById('challenges-grid-content');
   const adminBar = document.getElementById('admin-ideas-bar');
+  const heroIdeasEl = document.getElementById('hero-ideas-count');
+  if (heroIdeasEl && state.challenges.length > 0) {
+    heroIdeasEl.textContent = `💡 ${state.challenges.length}`;
+  }
   if (!grid) return;
 
   if (adminBar) {
@@ -730,7 +781,7 @@ function renderChallengesView() {
   grid.innerHTML = state.challenges.map((c, idx) => `
     <div class="challenge-card">
       <div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="challenge-card-top">
           <div class="challenge-badge">
             <span>💡 ${state.lang === 'ar' ? `فكرة التحدي ${idx + 1}` : `Challenge Idea ${idx + 1}`}</span> • ${c.category}
           </div>
@@ -755,7 +806,7 @@ function renderChallengesView() {
         </div>
 
         ${c.reward_or_grant ? `
-          <div style="font-size:0.85rem; color:#fbbf24; margin-bottom:12px; font-weight:600;">
+          <div class="challenge-reward">
             🏆 ${c.reward_or_grant}
           </div>
         ` : ''}
@@ -775,20 +826,31 @@ function renderChallengesView() {
 
 // 2. Submission Wizard
 function renderSubmissionWizard() {
+  const steps = [
+    { step: 1, label: state.lang === 'ar' ? 'بيانات المشروع' : 'Project Info' },
+    { step: 2, label: state.lang === 'ar' ? 'الجمهور المستهدف' : 'Target Audience' },
+    { step: 3, label: state.lang === 'ar' ? 'تحليل SWOT' : 'SWOT Matrix' },
+    { step: 4, label: state.lang === 'ar' ? 'دراسة الجدوى' : 'Feasibility' },
+    { step: 5, label: state.lang === 'ar' ? 'المستند والإرسال' : 'Doc & Submit' }
+  ];
+
   const stepsEl = document.getElementById('wizard-steps-container');
   if (stepsEl) {
-    stepsEl.innerHTML = [
-      { step: 1, label: state.lang === 'ar' ? '1. بيانات المشروع' : '1. Project Info' },
-      { step: 2, label: state.lang === 'ar' ? '2. الجمهور المستهدف' : '2. Target Audience' },
-      { step: 3, label: state.lang === 'ar' ? '3. تحليل SWOT' : '3. SWOT Matrix' },
-      { step: 4, label: state.lang === 'ar' ? '4. دراسة الجدوى' : '4. Dirasat Jadwa' },
-      { step: 5, label: state.lang === 'ar' ? '5. إرفاق المستند والإرسال' : '5. Attach Doc & Submit' }
-    ].map(s => `
+    stepsEl.innerHTML = steps.map(s => `
       <div class="wizard-step ${state.wizardStep === s.step ? 'active' : state.wizardStep > s.step ? 'completed' : ''}" onclick="setWizardStep(${s.step})">
         <div class="step-circle">${state.wizardStep > s.step ? '✓' : s.step}</div>
         <div class="step-label">${s.label}</div>
       </div>
     `).join('');
+  }
+
+  const captionEl = document.getElementById('wizard-mobile-caption');
+  if (captionEl) {
+    const activeObj = steps.find(s => s.step === state.wizardStep) || steps[0];
+    captionEl.innerHTML = `
+      <span class="wizard-mobile-step-pill">${state.lang === 'ar' ? `الخطوة ${activeObj.step} من 5` : `Step ${activeObj.step} of 5`}</span>
+      <span class="wizard-mobile-step-title">${activeObj.label}</span>
+    `;
   }
 
   for (let i = 1; i <= 5; i++) {
@@ -837,24 +899,24 @@ function renderWizardReview() {
   const team = document.getElementById('wiz-team-name')?.value || state.form.team_name;
 
   container.innerHTML = `
-    <div style="background:rgba(15,23,42,0.6); padding:20px; border-radius:12px; border:1px solid var(--border);">
-      <div style="font-size:0.8rem; color:#38bdf8; font-weight:700; margin-bottom:6px;">
+    <div class="wizard-review-card">
+      <div style="font-size:0.82rem; color:#38bdf8; font-weight:700; margin-bottom:6px;">
         🎯 ${challenge ? challenge.title : 'No track selected'}
       </div>
-      <h3 style="font-size:1.4rem; margin-bottom:8px;">${title || 'Untitled Project'}</h3>
-      <p style="color:var(--text-muted); margin-bottom:16px;">${pitch || 'No pitch provided'}</p>
-      <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:16px;">
+      <h3 style="font-size:1.25rem; margin-bottom:8px;">${title || 'Untitled Project'}</h3>
+      <p style="color:var(--text-muted); margin-bottom:14px; font-size:0.92rem;">${pitch || 'No pitch provided'}</p>
+      <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:14px;">
         👥 ${state.lang === 'ar' ? 'الفريق:' : 'Team:'} <strong>${team || (state.currentUser ? state.currentUser.name : 'Anonymous')}</strong>
       </div>
 
-      <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
-        <div>
+      <div class="wizard-review-grid">
+        <div class="wizard-review-item">
           <h5 style="color:#34d399; margin-bottom:6px;">✓ عناصر مصفوفة SWOT</h5>
           <span style="font-size:0.85rem; color:var(--text-muted);">
             نقاط القوة: ${state.form.swot.strengths.length} | الضعف: ${state.form.swot.weaknesses.length} | الفرص: ${state.form.swot.opportunities.length} | التهديدات: ${state.form.swot.threats.length}
           </span>
         </div>
-        <div>
+        <div class="wizard-review-item">
           <h5 style="color:#38bdf8; margin-bottom:6px;">💰 ملخص الجدوى المالية</h5>
           <span style="font-size:0.85rem; color:var(--text-muted);">
             CAPEX: $${state.form.feasibility.financial.capex} | نقطة التعادل: ${state.form.feasibility.financial.break_even_months} شهر | ROI: ${state.form.feasibility.financial.roi_percentage}%
@@ -872,7 +934,7 @@ function renderMySubmissionView() {
 
   if (!state.currentUser) {
     container.innerHTML = `
-      <div style="text-align:center; padding:60px 20px;">
+      <div class="empty-state-card">
         <h3>${state.lang === 'ar' ? 'يرجى تسجيل الدخول لعرض دراستك' : 'Please sign in to view your submission'}</h3>
         <button class="btn btn-primary" onclick="openAuthModal('login')" style="margin-top:16px;">تسجيل الدخول</button>
       </div>
@@ -882,10 +944,10 @@ function renderMySubmissionView() {
 
   if (state.submissions.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding:60px 20px; background:var(--bg-card); border-radius:16px; border:1px solid var(--border);">
+      <div class="empty-state-card">
         <div style="font-size:3rem; margin-bottom:12px;">📁</div>
         <h3>${state.lang === 'ar' ? 'لم تقم بتقديم أي دراسة جدوى بعد' : 'No submitted studies yet'}</h3>
-        <p style="color:var(--text-muted); margin:12px 0 20px 0;">
+        <p style="color:var(--text-muted); margin:12px auto 20px auto; max-width:480px;">
           ${state.lang === 'ar' ? 'اختر إحدى أفكار المسابقة وأعد دراسة الجدوى وأرفق مستندك لإرساله إلى لجنة التحكيم.' : 'Pick a challenge idea, complete your feasibility study, and attach your document.'}
         </p>
         <button class="btn btn-primary" onclick="navigateTo('submit')">🚀 ${state.lang === 'ar' ? 'إعداد دراسة الجدوى الآن' : 'Start Submission'}</button>
@@ -896,10 +958,10 @@ function renderMySubmissionView() {
 
   container.innerHTML = state.submissions.map(s => `
     <div class="wizard-card" style="margin-bottom:24px;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-        <div>
+      <div class="submission-status-header">
+        <div style="min-width:0; flex:1;">
           <span class="privacy-badge">🔒 محفوظة ومؤمنة في قاعدة البيانات (DB)</span>
-          <h2 style="font-size:1.6rem; margin-top:8px;">${s.title}</h2>
+          <h2 class="submission-item-title">${s.title}</h2>
           <div style="color:#38bdf8; font-size:0.88rem; font-weight:600;">🎯 فكرة التحدي: ${s.challenge_title}</div>
         </div>
         <div class="sub-score-badge" style="background:#0284c7;">
@@ -907,14 +969,14 @@ function renderMySubmissionView() {
         </div>
       </div>
 
-      <p style="font-size:1rem; color:var(--text-muted); margin-bottom:20px;">${s.pitch}</p>
+      <p style="font-size:0.98rem; color:var(--text-muted); margin-bottom:20px;">${s.pitch}</p>
 
       ${s.document_path ? `
         <div class="doc-attached-card" style="margin-bottom:20px;">
           <div class="doc-name">
-            <span style="font-size:1.5rem;">📄</span>
-            <div>
-              <div style="font-weight:700;">المستند المرفق بالدراسة: ${s.document_name || 'ملف دراسة الجدوى'}</div>
+            <span style="font-size:1.5rem; flex-shrink:0;">📄</span>
+            <div style="min-width:0;">
+              <div style="font-weight:700; word-break:break-word;">المستند المرفق بالدراسة: ${s.document_name || 'ملف دراسة الجدوى'}</div>
               <div style="font-size:0.75rem; color:var(--text-dim);">${Math.round((s.document_size || 0) / 1024)} KB • تم حفظه في قاعدة بيانات المسابقة</div>
             </div>
           </div>
@@ -928,7 +990,7 @@ function renderMySubmissionView() {
         </div>
       `}
 
-      <div style="display:flex; justify-content:flex-end; gap:12px;">
+      <div class="submission-card-actions">
         <button class="btn btn-secondary btn-sm" onclick="openDetailModal('${s.id}')">
           🔍 استعراض دراسة الجدوى وسوات
         </button>
@@ -946,7 +1008,7 @@ function renderLajnaView() {
 
   if (!isLajnaOrAdmin) {
     container.innerHTML = `
-      <div style="text-align:center; padding:60px 20px; background:var(--bg-card); border-radius:18px; border:1px solid var(--border);">
+      <div class="empty-state-card">
         <div style="font-size:3rem; margin-bottom:16px;">⚖️</div>
         <h2>${state.lang === 'ar' ? 'بوابة لجنة التحكيم السرية (Lajna Jury Portal)' : 'Confidential Lajna Jury Suite'}</h2>
         <p style="color:var(--text-muted); max-width:540px; margin:12px auto 24px auto;">
@@ -965,12 +1027,12 @@ function renderLajnaView() {
   // Check if Lajna is pending approval ("Only Admin can approve Lajna")
   if (state.currentUser.role === 'lajna' && !state.currentUser.is_approved) {
     container.innerHTML = `
-      <div style="text-align:center; padding:60px 24px; background:var(--bg-card); border-radius:18px; border:1px solid rgba(245, 158, 11, 0.4); max-width:760px; margin:20px auto;">
-        <div style="font-size:3.5rem; margin-bottom:16px;">⏳</div>
+      <div class="empty-state-card approval-pending-card">
+        <div style="font-size:3.2rem; margin-bottom:16px;">⏳</div>
         <div class="privacy-badge" style="background:rgba(245, 158, 11, 0.15); color:#fbbf24; border-color:rgba(245, 158, 11, 0.4); margin-bottom:16px;">
           بانتظار اعتماد مدير المسابقة (Admin Approval Required)
         </div>
-        <h2 style="font-size:1.8rem; margin-bottom:12px;">طلب عضويتك في لجنة التحكيم قيد المراجعة</h2>
+        <h2 style="font-size:clamp(1.25rem, 3vw, 1.75rem); margin-bottom:12px;">طلب عضويتك في لجنة التحكيم قيد المراجعة</h2>
         <p style="color:var(--text-muted); line-height:1.8; margin-bottom:24px;">
           مرحباً بك <strong>${state.currentUser.name}</strong>. في مسابقة <strong>MLIC CHALLENGE</strong>، 
           <span style="color:#fbbf24; font-weight:700;">مدير المسابقة (Admin) هو الوحيد المخول باعتماد أعضاء لجنة التحكيم</span> حفاظاً على سرية المشاريع ونزاهة التحكيم. 
@@ -1067,19 +1129,20 @@ function renderAdminLajnaView() {
   const approved = users.filter(u => u.is_approved);
 
   container.innerHTML = `
-    <div style="background:linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.15)); border:1px solid rgba(245, 158, 11, 0.3); border-radius:14px; padding:20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center;">
-      <div>
+    <div class="admin-banner">
+      <div class="admin-banner-text">
         <h3 style="color:#fbbf24; margin-bottom:4px;">👑 لوحة تحكم الأدمن: اعتماد أعضاء لجنة التحكيم</h3>
         <p style="color:#fef3c7; font-size:0.88rem;">
           حفاظاً على نزاهة وسرية مسابقة MLIC CHALLENGE، لا يستطيع أي محكّم الاطلاع على المشاريع أو تقييمها حتى يتم اعتماده رسمياً من قبلك هنا.
         </p>
       </div>
-      <div style="text-align:center; background:rgba(0,0,0,0.3); padding:8px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+      <div class="admin-pending-box">
         <div style="font-size:1.6rem; font-weight:800; color:#fbbf24;">${pending.length}</div>
         <div style="font-size:0.75rem; color:var(--text-muted);">بانتظار الاعتماد</div>
       </div>
     </div>
 
+    <div class="table-scroll-hint">↔️ ${state.lang === 'ar' ? 'اسحب الجدول أفقياً لعرض جميع الأعمدة' : 'Scroll horizontally to view all columns'}</div>
     <div class="leaderboard-table-container">
       <table class="leaderboard-table">
         <thead>
@@ -1156,14 +1219,14 @@ function renderLeaderboardView() {
   const top3 = state.leaderboard.slice(0, 3);
 
   container.innerHTML = `
-    <div style="text-align:center; margin-bottom:30px;">
+    <div class="leaderboard-header">
       <div class="hero-pill" style="border-color:rgba(245, 158, 11, 0.4); color:#fbbf24; background:rgba(245, 158, 11, 0.1);">
         🏆 ${state.winnersAnnounced ? (state.lang === 'ar' ? 'تم اعتماد وإعلان الفائزين رسمياً!' : 'Official Winners Announced!') : (state.lang === 'ar' ? 'النتائج قيد التحكيم والفرز لدى اللجنة' : 'Deliberation in Progress')}
       </div>
-      <h2 style="font-size:2.2rem; margin-top:8px;">
+      <h2 class="leaderboard-title">
         ${state.lang === 'ar' ? 'منصة تتويج الفائزين وجدول الترتيب النهائي' : 'Winners Podium & Final Standings'}
       </h2>
-      <p style="color:var(--text-muted); max-width:600px; margin:8px auto;">
+      <p class="leaderboard-subtitle">
         ${state.lang === 'ar' 
           ? 'تحديد الفائزين بناءً على مجموع درجات لجنة التحكيم لمصفوفة SWOT ودراسة الجدوى الفنية والمالية والمستند المرفق.'
           : 'Determined by the Lajna committee scores across SWOT, feasibility study, and attached documentation.'}
@@ -1179,7 +1242,7 @@ function renderLeaderboardView() {
     </div>
 
     ${!state.winnersAnnounced && !state.isLajnaOrAdmin ? `
-      <div style="text-align:center; padding:60px 20px; background:var(--bg-card); border-radius:18px; border:1px solid var(--border);">
+      <div class="empty-state-card">
         <div style="font-size:3rem; margin-bottom:12px;">⏳</div>
         <h3>${state.lang === 'ar' ? 'جلسة التحكيم جارية الآن' : 'Jury Deliberation in Progress'}</h3>
         <p style="color:var(--text-muted); max-width:500px; margin:10px auto;">
@@ -1227,7 +1290,8 @@ function renderLeaderboardView() {
       ` : ''}
 
       <!-- Leaderboard Table -->
-      <div class="leaderboard-table-container" style="margin-top:36px;">
+      <div class="table-scroll-hint" style="margin-top:28px;">↔️ ${state.lang === 'ar' ? 'اسحب الجدول أفقياً لعرض جميع الأعمدة' : 'Scroll horizontally to view all columns'}</div>
+      <div class="leaderboard-table-container">
         <table class="leaderboard-table">
           <thead>
             <tr>
@@ -1283,27 +1347,27 @@ async function renderDbStatusView() {
     const data = await api('/api/db/status');
 
     container.innerHTML = `
-      <div style="max-width:820px; margin:0 auto; background:var(--bg-card); border-radius:18px; border:1px solid var(--border); padding:32px;">
-        <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
-          <div style="font-size:2.8rem;">🐘</div>
+      <div class="db-card">
+        <div class="db-header">
+          <div style="font-size:2.6rem; flex-shrink:0;">🐘</div>
           <div>
-            <h2 style="font-size:1.6rem;">PostgreSQL Architecture & Confidential Storage</h2>
+            <h2 class="db-title">PostgreSQL Architecture & Confidential Storage</h2>
             <p style="color:var(--text-muted); font-size:0.9rem;">
               Submissions, attached documents, and SWOT/feasibility studies are stored directly in the database for the Lajna jury committee.
             </p>
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:18px; margin-bottom:24px;">
-          <div style="background:rgba(15,23,42,0.8); padding:18px; border-radius:12px; border:1px solid var(--border);">
+        <div class="db-engine-grid">
+          <div class="db-info-box">
             <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Active Storage Engine</div>
-            <div style="font-size:1.15rem; font-weight:700; color:#34d399;">⚡ ${data.active_engine}</div>
+            <div style="font-size:1.1rem; font-weight:700; color:#34d399;">⚡ ${data.active_engine}</div>
             <div style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;">Direct to DB storage with document links and encrypted records.</div>
           </div>
 
-          <div style="background:rgba(15,23,42,0.8); padding:18px; border-radius:12px; border:1px solid var(--border);">
+          <div class="db-info-box">
             <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">PostgreSQL Port 5432 Status</div>
-            <div style="font-size:1.15rem; font-weight:700; color:${data.postgres.online ? '#34d399' : '#f59e0b'};">
+            <div style="font-size:1.1rem; font-weight:700; color:${data.postgres.online ? '#34d399' : '#f59e0b'};">
               ${data.postgres.online ? '🟢 Online & Connected' : '🟡 Ready (Connects when PostgreSQL starts)'}
             </div>
             <div style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;">${data.postgres.status_message}</div>
@@ -1311,7 +1375,7 @@ async function renderDbStatusView() {
         </div>
 
         <h4 style="margin-bottom:12px;">📊 Records Stored in Database</h4>
-        <div style="display:flex; gap:18px; margin-bottom:28px;">
+        <div class="db-stats-grid">
           <div class="stat-item"><div class="stat-value">${data.counts.users}</div><div class="stat-label">Users</div></div>
           <div class="stat-item"><div class="stat-value">${data.counts.challenges}</div><div class="stat-label">Challenges</div></div>
           <div class="stat-item"><div class="stat-value">${data.counts.submissions}</div><div class="stat-label">Submissions</div></div>
@@ -1322,7 +1386,7 @@ async function renderDbStatusView() {
         <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">
           Download the latest PostgreSQL schema and full database SQL file with one click:
         </p>
-        <div style="display:flex; gap:12px;">
+        <div class="db-actions-row">
           <a href="/api/db/export-postgres" download="agrivers_postgres.sql" class="btn btn-primary">
             📥 Download PostgreSQL Dump (agrivers_postgres.sql)
           </a>
@@ -1350,13 +1414,13 @@ function renderDetailModalContent(sub) {
 
   container.innerHTML = `
     <div style="margin-bottom:24px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="detail-header-row">
         <span class="privacy-badge">🔒 مستند ودراسة محفوظة في قاعدة البيانات (DB)</span>
         <span style="font-size:0.8rem; color:#38bdf8; font-weight:700;">🎯 ${sub.challenge_title}</span>
       </div>
-      <h2 style="font-size:1.8rem; margin:10px 0 8px 0;">${sub.title}</h2>
-      <p style="font-size:1.05rem; color:var(--text-muted);">${sub.pitch}</p>
-      <div style="display:flex; gap:16px; font-size:0.85rem; color:var(--text-dim); margin-top:10px;">
+      <h2 class="detail-title">${sub.title}</h2>
+      <p style="font-size:1rem; color:var(--text-muted);">${sub.pitch}</p>
+      <div class="detail-meta-row">
         <span>👥 ${state.lang === 'ar' ? 'الفريق:' : 'Team:'} <strong>${sub.team_name}</strong></span>
         <span>👤 ${state.lang === 'ar' ? 'الأعضاء:' : 'Members:'} ${sub.team_members}</span>
       </div>
@@ -1365,22 +1429,22 @@ function renderDetailModalContent(sub) {
     <!-- Attached Document Download Box (If present) -->
     ${sub.document_path ? `
       <div class="doc-attached-card" style="margin-bottom:24px; padding:16px;">
-        <div class="doc-name" style="font-size:1.05rem;">
-          <span style="font-size:1.8rem;">📄</span>
-          <div>
-            <div>${sub.document_name || 'ملف دراسة الجدوى المرفق'}</div>
+        <div class="doc-name" style="font-size:1rem;">
+          <span style="font-size:1.7rem; flex-shrink:0;">📄</span>
+          <div style="min-width:0;">
+            <div style="word-break:break-word;">${sub.document_name || 'ملف دراسة الجدوى المرفق'}</div>
             <div style="font-size:0.78rem; color:var(--text-dim);">${Math.round((sub.document_size || 0) / 1024)} KB • مرفوع ومحفوظ في السيرفر</div>
           </div>
         </div>
-        <a href="${sub.document_path}" target="_blank" download class="btn btn-primary">
+        <a href="${sub.document_path}" target="_blank" download class="btn btn-primary btn-sm">
           📥 تحميل وفتح المستند المرفق (Download Doc)
         </a>
       </div>
     ` : ''}
 
     <!-- Target Audience -->
-    <div class="rubric-card" style="border-left:4px solid #38bdf8; margin-bottom:20px;">
-      <h3 style="color:#38bdf8; margin-bottom:12px; font-size:1.2rem;">
+    <div class="rubric-card detail-audience-card">
+      <h3 style="color:#38bdf8; margin-bottom:12px; font-size:1.15rem;">
         🎯 ${state.lang === 'ar' ? 'دراسة الجمهور المستهدف (Target Audience & Market Fit)' : 'Target Audience & Market Fit'}
       </h3>
       <div style="font-size:0.92rem; line-height:1.7;">
@@ -1393,38 +1457,38 @@ function renderDetailModalContent(sub) {
     </div>
 
     <!-- SWOT Matrix -->
-    <h3 style="margin-bottom:12px; font-size:1.2rem;">
+    <h3 style="margin-bottom:12px; font-size:1.15rem;">
       🧭 ${state.lang === 'ar' ? 'مصفوفة تحليل سوات الرباعي (SWOT Analysis)' : 'SWOT Analysis Matrix'}
     </h3>
     <div class="swot-grid">
       <div class="swot-quadrant swot-s">
         <h4 style="color:#34d399;">🟢 Strengths (نقاط القوة)</h4>
-        <ul style="list-style:disc; margin-left:20px; font-size:0.88rem; margin-top:8px;">
+        <ul class="detail-swot-list">
           ${(swot.strengths || []).map(s => `<li>${s}</li>`).join('') || '<li>N/A</li>'}
         </ul>
       </div>
       <div class="swot-quadrant swot-w">
         <h4 style="color:#fbbf24;">🟡 Weaknesses (نقاط الضعف)</h4>
-        <ul style="list-style:disc; margin-left:20px; font-size:0.88rem; margin-top:8px;">
+        <ul class="detail-swot-list">
           ${(swot.weaknesses || []).map(w => `<li>${w}</li>`).join('') || '<li>N/A</li>'}
         </ul>
       </div>
       <div class="swot-quadrant swot-o">
         <h4 style="color:#38bdf8;">🔵 Opportunities (الفرص)</h4>
-        <ul style="list-style:disc; margin-left:20px; font-size:0.88rem; margin-top:8px;">
+        <ul class="detail-swot-list">
           ${(swot.opportunities || []).map(o => `<li>${o}</li>`).join('') || '<li>N/A</li>'}
         </ul>
       </div>
       <div class="swot-quadrant swot-t">
         <h4 style="color:#f87171;">🔴 Threats (التهديدات)</h4>
-        <ul style="list-style:disc; margin-left:20px; font-size:0.88rem; margin-top:8px;">
+        <ul class="detail-swot-list">
           ${(swot.threats || []).map(t => `<li>${t}</li>`).join('') || '<li>N/A</li>'}
         </ul>
       </div>
     </div>
 
     <!-- Feasibility Study -->
-    <h3 style="margin:24px 0 12px 0; font-size:1.2rem;">
+    <h3 style="margin:24px 0 12px 0; font-size:1.15rem;">
       📈 ${state.lang === 'ar' ? 'دراسة الجدوى الشاملة (Dirasat Jadwa)' : 'Comprehensive Feasibility Study'}
     </h3>
     <div class="feasibility-grid">
@@ -1442,7 +1506,7 @@ function renderDetailModalContent(sub) {
         <p style="font-size:0.82rem; color:var(--text-dim); margin-top:6px;"><strong>${state.lang === 'ar' ? 'قنوات التوزيع:' : 'Channels:'}</strong> ${feas.market?.marketing_channels || 'N/A'}</p>
       </div>
 
-      <div class="feasibility-box" style="grid-column:1/-1;">
+      <div class="feasibility-box feasibility-box-full">
         <h4>💰 ${state.lang === 'ar' ? 'الجدوى المالية والمؤشرات الاستثمارية' : 'Financial Feasibility & Metrics'}</h4>
         <div class="calc-result-box" style="margin-top:8px;">
           <div class="calc-item"><div class="val">$${(fin.capex || 0).toLocaleString()}</div><div class="lbl">رأس المال التأسيسي (CAPEX)</div></div>
@@ -1464,13 +1528,13 @@ function renderDetailModalContent(sub) {
 
     <!-- Jury Evaluations -->
     ${evals.length > 0 ? `
-      <h3 style="margin:24px 0 12px 0; font-size:1.2rem;">
+      <h3 style="margin:24px 0 12px 0; font-size:1.15rem;">
         ⚖️ ${state.lang === 'ar' ? 'تقييمات وملاحظات لجنة التحكيم (Lajna Reviews)' : 'Lajna Jury Evaluations'}
       </h3>
       <div style="display:flex; flex-direction:column; gap:12px;">
         ${evals.map(ev => `
-          <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border); border-radius:10px; padding:16px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <div class="eval-item-card">
+            <div class="eval-item-header">
               <strong>${ev.judge_name} <span style="font-size:0.8rem; color:var(--text-dim);">(${ev.judge_org || 'Lajna'})</span></strong>
               <span class="sub-score-badge">⭐ ${ev.total_score} / 100</span>
             </div>
@@ -1665,6 +1729,27 @@ async function handleRegisterSubmit(e) {
   return false;
 }
 
+// Mobile Hamburger Navigation Toggle
+function toggleMobileMenu(forceState) {
+  const hamburger = document.getElementById('nav-hamburger');
+  const menu = document.querySelector('.nav-menu');
+  const backdrop = document.getElementById('nav-backdrop');
+
+  const isOpen = forceState !== undefined ? forceState : !menu?.classList.contains('open');
+
+  if (hamburger) {
+    hamburger.classList.toggle('active', isOpen);
+    hamburger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+  if (menu) {
+    menu.classList.toggle('open', isOpen);
+  }
+  if (backdrop) {
+    backdrop.classList.toggle('active', isOpen);
+  }
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
 // Setup Event Listeners
 function setupEventListeners() {
   document.querySelectorAll('.nav-item').forEach(item => {
@@ -1679,4 +1764,18 @@ function setupEventListeners() {
 
   const regForm = document.getElementById('modal-register-form') || document.getElementById('form-register');
   regForm?.addEventListener('submit', handleRegisterSubmit);
+
+  // Close mobile menu on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      toggleMobileMenu(false);
+    }
+  });
+
+  // Auto-close mobile menu if resized to desktop
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 960) {
+      toggleMobileMenu(false);
+    }
+  });
 }

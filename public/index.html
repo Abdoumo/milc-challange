@@ -4,394 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MLIC CHALLENGE - دراسات الجدوى ولجنة التحكيم</title>
-  <link rel="stylesheet" href="style.css?v=20261118_v4">
+  <link rel="stylesheet" href="style.css?v=20261124_v6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-
-  <style>
-    /* ==========================================================
-       ABSOLUTE FAIL-SAFE NAVBAR LAYOUT (Guarantees Perfect Flex Row)
-       ========================================================== */
-    header.navbar {
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 1000 !important;
-      height: 68px;
-      min-height: 68px;
-      background: rgba(8, 13, 24, 0.92) !important;
-      backdrop-filter: blur(24px) saturate(190%) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-      box-shadow: 0 10px 35px -5px rgba(0, 0, 0, 0.6) !important;
-      display: flex !important;
-      align-items: center !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      width: 100% !important;
-    }
-
-    header.navbar::before {
-      content: '' !important;
-      position: absolute !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      height: 1px !important;
-      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 15%, rgba(56, 189, 248, 0.6) 45%, rgba(16, 185, 129, 0.6) 65%, rgba(139, 92, 246, 0.4) 85%, transparent 100%) !important;
-      pointer-events: none !important;
-    }
-
-    .nav-container {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-      width: 100% !important;
-      max-width: 1440px !important;
-      margin: 0 auto !important;
-      padding: 0 24px !important;
-      height: 100% !important;
-      box-sizing: border-box !important;
-    }
-
-    .brand {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 12px !important;
-      cursor: pointer !important;
-      text-decoration: none !important;
-      user-select: none !important;
-      flex-shrink: 0 !important;
-    }
-
-    .brand-emblem {
-      width: 38px !important;
-      height: 38px !important;
-      border-radius: 11px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95)) !important;
-      border: 1px solid rgba(255, 255, 255, 0.16) !important;
-      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.25) !important;
-      flex-shrink: 0 !important;
-    }
-
-    .brand-logo-svg {
-      width: 26px !important;
-      height: 26px !important;
-      display: block !important;
-    }
-
-    .brand-info {
-      display: flex !important;
-      flex-direction: column !important;
-    }
-
-    .brand-title-row {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 6px !important;
-    }
-
-    .brand-name {
-      font-size: 1.32rem !important;
-      font-weight: 900 !important;
-      letter-spacing: -0.5px !important;
-      background: linear-gradient(135deg, #ffffff 20%, #e0f2fe 60%, #38bdf8 100%) !important;
-      -webkit-background-clip: text !important;
-      -webkit-text-fill-color: transparent !important;
-      line-height: 1.1 !important;
-    }
-
-    .brand-edition {
-      font-size: 0.92rem !important;
-      font-weight: 700 !important;
-      letter-spacing: 0.8px !important;
-      color: #cbd5e1 !important;
-    }
-
-    .brand-badge {
-      font-size: 0.62rem !important;
-      font-weight: 800 !important;
-      padding: 2px 7px !important;
-      border-radius: 999px !important;
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(56, 189, 248, 0.25)) !important;
-      border: 1px solid rgba(56, 189, 248, 0.5) !important;
-      color: #38bdf8 !important;
-    }
-
-    .brand-tagline {
-      font-size: 0.72rem !important;
-      color: #64748b !important;
-      font-weight: 500 !important;
-      margin-top: 1px !important;
-    }
-
-    /* CENTER MENU: ALWAYS STRICT HORIZONTAL FLEX ROW */
-    nav.nav-menu {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      margin: 0 auto !important;
-    }
-
-    .nav-pill-group,
-    nav ul {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 3px !important;
-      list-style: none !important;
-      background: rgba(15, 23, 42, 0.75) !important;
-      backdrop-filter: blur(16px) !important;
-      padding: 4px 6px !important;
-      border-radius: 9999px !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
-      margin: 0 !important;
-    }
-
-    .nav-item {
-      display: inline-flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 7px !important;
-      padding: 7px 15px !important;
-      border-radius: 9999px !important;
-      color: #94a3b8 !important;
-      font-size: 0.86rem !important;
-      font-weight: 600 !important;
-      cursor: pointer !important;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-      user-select: none !important;
-      white-space: nowrap !important;
-      border: 1px solid transparent !important;
-      background: transparent !important;
-    }
-
-    .nav-item:hover {
-      color: #ffffff !important;
-      background: rgba(255, 255, 255, 0.06) !important;
-    }
-
-    .nav-item.active {
-      color: #ffffff !important;
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(56, 189, 248, 0.18) 100%) !important;
-      border: 1px solid rgba(56, 189, 248, 0.45) !important;
-      box-shadow: 0 2px 14px rgba(16, 185, 129, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25) !important;
-    }
-
-    .nav-icon {
-      width: 15px !important;
-      height: 15px !important;
-      display: inline-block !important;
-      vertical-align: middle !important;
-      flex-shrink: 0 !important;
-    }
-
-    .nav-counter {
-      font-size: 0.68rem !important;
-      font-weight: 800 !important;
-      padding: 1px 6px !important;
-      border-radius: 999px !important;
-      background: rgba(139, 92, 246, 0.35) !important;
-      border: 1px solid rgba(139, 92, 246, 0.5) !important;
-      color: #c4b5fd !important;
-    }
-
-    .counter-amber {
-      background: rgba(245, 158, 11, 0.35) !important;
-      border-color: rgba(245, 158, 11, 0.6) !important;
-      color: #fde68a !important;
-    }
-
-    /* RIGHT ACTIONS: STRICT HORIZONTAL FLEX ROW */
-    .nav-actions {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 10px !important;
-      flex-shrink: 0 !important;
-    }
-
-    .nav-db-pill {
-      display: inline-flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 8px !important;
-      padding: 6px 13px !important;
-      background: rgba(15, 23, 42, 0.7) !important;
-      border: 1px solid rgba(56, 189, 248, 0.25) !important;
-      border-radius: 999px !important;
-      color: #7dd3fc !important;
-      font-size: 0.78rem !important;
-      font-weight: 700 !important;
-      cursor: pointer !important;
-    }
-
-    .pulse-dot {
-      width: 7px !important;
-      height: 7px !important;
-      border-radius: 50% !important;
-      background: #38bdf8 !important;
-      box-shadow: 0 0 8px #38bdf8 !important;
-      flex-shrink: 0 !important;
-    }
-
-    .lang-segmented-control {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      background: rgba(15, 23, 42, 0.7) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      border-radius: 999px !important;
-      padding: 3px !important;
-      cursor: pointer !important;
-      user-select: none !important;
-    }
-
-    .lang-opt {
-      padding: 3px 10px !important;
-      font-size: 0.76rem !important;
-      font-weight: 700 !important;
-      border-radius: 999px !important;
-      color: #94a3b8 !important;
-    }
-    .lang-opt.active {
-      background: rgba(255, 255, 255, 0.16) !important;
-      color: #ffffff !important;
-    }
-
-    #nav-user-container {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 8px !important;
-    }
-
-    .user-pill {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 8px !important;
-      padding: 4px 12px 4px 5px !important;
-      background: rgba(15, 23, 42, 0.75) !important;
-      border: 1px solid rgba(255, 255, 255, 0.12) !important;
-      border-radius: 999px !important;
-      cursor: pointer !important;
-    }
-
-    .user-avatar-circle {
-      width: 30px !important;
-      height: 30px !important;
-      border-radius: 50% !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      font-weight: 800 !important;
-      font-size: 0.82rem !important;
-      color: white !important;
-    }
-
-    .user-pill-info {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 6px !important;
-    }
-
-    .nav-logout-btn {
-      background: rgba(239, 68, 68, 0.12) !important;
-      border: 1px solid rgba(239, 68, 68, 0.28) !important;
-      color: #f87171 !important;
-      width: 32px !important;
-      height: 32px !important;
-      border-radius: 50% !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      cursor: pointer !important;
-    }
-
-    .nav-btn-ghost {
-      background: transparent !important;
-      border: 1px solid rgba(255, 255, 255, 0.14) !important;
-      color: #cbd5e1 !important;
-      font-size: 0.84rem !important;
-      font-weight: 600 !important;
-      padding: 7px 15px !important;
-      border-radius: 999px !important;
-      cursor: pointer !important;
-    }
-
-    .nav-btn-glow {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 6px !important;
-      background: linear-gradient(135deg, #10b981 0%, #0284c7 100%) !important;
-      border: 1px solid rgba(255, 255, 255, 0.25) !important;
-      color: #ffffff !important;
-      font-size: 0.84rem !important;
-      font-weight: 700 !important;
-      padding: 7px 18px !important;
-      border-radius: 999px !important;
-      cursor: pointer !important;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35) !important;
-    }
-    .user-pill-name {
-      font-size: 0.88rem !important;
-      font-weight: 700 !important;
-      color: #f1f5f9 !important;
-    }
-
-    .role-badge {
-      font-size: 0.65rem !important;
-      font-weight: 800 !important;
-      padding: 2px 7px !important;
-      border-radius: 999px !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.4px !important;
-    }
-
-    .role-badge.role-admin {
-      background: rgba(245, 158, 11, 0.2) !important;
-      color: #fbbf24 !important;
-      border: 1px solid rgba(245, 158, 11, 0.4) !important;
-    }
-
-    .role-badge.role-lajna {
-      background: rgba(139, 92, 246, 0.2) !important;
-      color: #c4b5fd !important;
-      border: 1px solid rgba(139, 92, 246, 0.4) !important;
-    }
-
-    .role-badge.role-participant {
-      background: rgba(16, 185, 129, 0.2) !important;
-      color: #6ee7b7 !important;
-      border: 1px solid rgba(16, 185, 129, 0.4) !important;
-    }
-
-    .role-admin-bg { 
-      background: linear-gradient(135deg, #f59e0b, #d97706) !important; 
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4) !important; 
-    }
-
-    .role-lajna-bg { 
-      background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important; 
-      box-shadow: 0 0 12px rgba(139, 92, 246, 0.4) !important; 
-    }
-
-    .role-participant-bg { 
-      background: linear-gradient(135deg, #10b981, #0284c7) !important; 
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4) !important; 
-    }
-  </style>
 </head>
 <body>
 
@@ -429,8 +46,9 @@
         </div>
       </div>
 
-      <!-- Center Navigation: Floating Segmented Capsule -->
-      <nav class="nav-menu">
+      <!-- Center Navigation: Floating Segmented Capsule / Mobile Drawer -->
+      <nav class="nav-menu" id="nav-menu">
+        <div class="mobile-drawer-user" id="mobile-drawer-user"></div>
         <ul class="nav-pill-group">
           <li class="nav-item active" data-view="challenges">
             <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 01-1.92-3.5A5.002 5.002 0 0115 10c0 1.5-.7 2.8-1.92 3.5A4.002 4.002 0 0112 14z"/></svg>
@@ -459,6 +77,12 @@
             <span class="nav-counter counter-amber" id="nav-pending-badge" style="display:none;">0</span>
           </li>
         </ul>
+        <div class="mobile-drawer-footer">
+          <button type="button" class="mobile-drawer-db-btn" onclick="navigateTo('db-info')">
+            <span class="pulse-dot"></span>
+            <span id="mobile-db-label">حالة قاعدة البيانات (PostgreSQL)</span>
+          </button>
+        </div>
       </nav>
 
       <!-- Right Nav Controls -->
@@ -479,22 +103,34 @@
         <div id="nav-user-container">
           <!-- Populated dynamically by app.js -->
         </div>
+
+        <!-- Mobile Hamburger Toggle Button -->
+        <button type="button" class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Toggle navigation" aria-expanded="false">
+          <span class="hamburger-bar bar-1"></span>
+          <span class="hamburger-bar bar-2"></span>
+          <span class="hamburger-bar bar-3"></span>
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- Mobile Navigation Backdrop -->
+  <div class="nav-backdrop" id="nav-backdrop" onclick="toggleMobileMenu(false)"></div>
 
   <!-- Hero Header -->
   <section class="hero">
     <div class="container hero-content">
       <div class="hero-pill">
-        <span>🏆 مسابقة MLIC CHALLENGE 2026</span> • <span>تحكيم حصري من لجنة الخبراء</span>
+        <span>🏆 مسابقة MLIC CHALLENGE 2026</span>
+        <span class="hero-pill-sep">•</span>
+        <span>تحكيم حصري من لجنة الخبراء</span>
       </div>
       <h2>حوّل أفكار التحدي إلى دراسة جدوى متكاملة ومستند رسمي</h2>
       <p>
         سجّل دخولك في مسابقة MLIC CHALLENGE، اختر من الأفكار المطروحة، أعد دراسة الجدوى ومصفوفة SWOT وحدد جمهورك وأرفق ملف المستند (PDF / Doc). دراستك سرية ومحفوظة مباشرة في قاعدة البيانات للمراجعة الحصرية من قِبل لجنة التحكيم (Lajna)!
       </p>
 
-      <div style="display:flex; justify-content:center; gap:16px;">
+      <div class="hero-actions">
         <button class="btn btn-primary btn-lg" onclick="navigateTo('submit')">
           ✍️ إعداد دراسة الجدوى وإرفاق المستند
         </button>
@@ -505,6 +141,7 @@
 
       <div class="hero-stats">
         <div class="stat-item">
+          <div class="stat-value" id="hero-ideas-count">💡 3+</div>
           <div class="stat-label">أفكار تحدي قابلة للتعديل</div>
         </div>
         <div class="stat-item">
@@ -547,11 +184,12 @@
 
     <!-- 2. VIEW: SUBMISSION WIZARD (Direct to DB + Doc Upload) -->
     <div id="view-submit" style="display:none;">
-      <div class="section-header">
+      <div class="section-header section-header-submit">
         <div>
-          <h2 class="section-title">🚀 إعداد دراسة الجدوى وإرفاق المستند (Submission to DB)</h2>
-          <p class="section-subtitle">
-            🔒 دراستك محمية وسرية: تُحفظ مباشرة في قاعدة البيانات للمراجعة الحصرية من قبل لجنة التحكيم فقط
+          <h2 class="section-title">🚀 إعداد دراسة الجدوى وإرفاق المستند <span class="title-tag-en">(Submission to DB)</span></h2>
+          <p class="section-subtitle confidential-subtitle">
+            <span>🔒</span>
+            <span>دراستك محمية وسرية: تُحفظ مباشرة في قاعدة البيانات للمراجعة الحصرية من قبل لجنة التحكيم فقط</span>
           </p>
         </div>
       </div>
@@ -560,10 +198,11 @@
         <div class="wizard-steps" id="wizard-steps-container">
           <!-- Steps rendered dynamically -->
         </div>
+        <div class="wizard-mobile-caption" id="wizard-mobile-caption"></div>
 
         <!-- STEP 1: Project Identity -->
-        <div id="wizard-step-1">
-          <h3 style="margin-bottom:16px;">1. بيانات المشروع والفكرة</h3>
+        <div id="wizard-step-1" class="wizard-pane">
+          <h3 class="wizard-pane-title">1. بيانات المشروع والفكرة</h3>
           
           <div class="form-group">
             <label class="form-label">فكرة التحدي المرتبطة *</label>
@@ -582,7 +221,7 @@
             <textarea class="form-control" id="wiz-pitch" placeholder="اشرح الحل في جملتين إلى ثلاث جمل واضحة توضح القيمة المضافة..."></textarea>
           </div>
 
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+          <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label">اسم الفريق</label>
               <input type="text" class="form-control" id="wiz-team-name" placeholder="مثال: فريق الابتكار الزراعي">
@@ -593,14 +232,14 @@
             </div>
           </div>
 
-          <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+          <div class="wizard-nav-actions wizard-nav-end">
             <button class="btn btn-primary" onclick="setWizardStep(2)">التالي: دراسة الجمهور المستهدف ←</button>
           </div>
         </div>
 
         <!-- STEP 2: Target Audience -->
-        <div id="wizard-step-2" style="display:none;">
-          <h3 style="margin-bottom:16px;">2. دراسة الجمهور المستهدف (Target Audience & Market Fit)</h3>
+        <div id="wizard-step-2" class="wizard-pane" style="display:none;">
+          <h3 class="wizard-pane-title">2. دراسة الجمهور المستهدف (Target Audience & Market Fit)</h3>
           
           <div class="form-group">
             <label class="form-label">الشريحة الأساسية المستهدفة (Primary Segment) *</label>
@@ -617,7 +256,7 @@
             <textarea class="form-control" id="aud-value" placeholder="لماذا سيختار العميل حلك تحديداً؟"></textarea>
           </div>
 
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+          <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label">تقدير حجم السوق (TAM / SAM / SOM)</label>
               <input type="text" class="form-control" id="aud-market-size" placeholder="TAM: 100K مزرعة | SAM: 25K | SOM: 500">
@@ -628,16 +267,16 @@
             </div>
           </div>
 
-          <div style="display:flex; justify-content:space-between; margin-top:20px;">
+          <div class="wizard-nav-actions">
             <button class="btn btn-secondary" onclick="setWizardStep(1)">→ السابق</button>
             <button class="btn btn-primary" onclick="setWizardStep(3)">التالي: تحليل SWOT الرباعي ←</button>
           </div>
         </div>
 
         <!-- STEP 3: SWOT Matrix -->
-        <div id="wizard-step-3" style="display:none;">
-          <h3 style="margin-bottom:8px;">3. مصفوفة تحليل سوات الرباعي (SWOT Analysis)</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+        <div id="wizard-step-3" class="wizard-pane" style="display:none;">
+          <h3 class="wizard-pane-title">3. مصفوفة تحليل سوات الرباعي (SWOT Analysis)</h3>
+          <p class="wizard-pane-desc">
             أضف نقاط القوة والضعف (داخلية) والفرص والتهديدات (خارجية) لبناء تحليل استراتيجي يعتمده المحكّمون.
           </p>
 
@@ -687,16 +326,16 @@
             </div>
           </div>
 
-          <div style="display:flex; justify-content:space-between; margin-top:20px;">
+          <div class="wizard-nav-actions">
             <button class="btn btn-secondary" onclick="setWizardStep(2)">→ السابق</button>
             <button class="btn btn-primary" onclick="setWizardStep(4)">التالي: دراسة الجدوى (Dirasat Jadwa) ←</button>
           </div>
         </div>
 
         <!-- STEP 4: Feasibility Study (Dirasat Jadwa) -->
-        <div id="wizard-step-4" style="display:none;">
-          <h3 style="margin-bottom:8px;">4. دراسة الجدوى الشاملة (Dirasat Jadwa)</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+        <div id="wizard-step-4" class="wizard-pane" style="display:none;">
+          <h3 class="wizard-pane-title">4. دراسة الجدوى الشاملة (Dirasat Jadwa)</h3>
+          <p class="wizard-pane-desc">
             الجدوى الفنية، التسويقية، والمالية مع حاسبة المؤشرات الاستثمارية الفورية.
           </p>
 
@@ -739,9 +378,9 @@
             </div>
 
             <!-- Financial -->
-            <div class="feasibility-box" style="grid-column:1/-1;">
+            <div class="feasibility-box feasibility-box-full">
               <h4>💰 الجدوى المالية وحاسبة المؤشرات الاستثمارية</h4>
-              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:14px;">
+              <div class="form-grid-3">
                 <div class="form-group">
                   <label class="form-label">رأس المال التأسيسي (CAPEX $)</label>
                   <input type="number" class="form-control" id="fin-capex" value="18000" oninput="updateFinancialCalc()">
@@ -756,7 +395,7 @@
                 </div>
               </div>
 
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+              <div class="form-grid-2">
                 <div class="form-group">
                   <label class="form-label">سعر البيع للوحدة ($)</label>
                   <input type="number" class="form-control" id="fin-price" value="1400" oninput="updateFinancialCalc()">
@@ -782,16 +421,16 @@
                 </div>
               </div>
 
-              <div class="form-group" style="margin-top:18px;">
+              <div class="form-group" style="margin-top:18px; margin-bottom:0;">
                 <label class="form-label">💳 نظام المدفوعات ونموذج الفوترة (Payment System & Billing Model)</label>
                 <input type="text" class="form-control" id="fin-payment-system" placeholder="مثال: بوابات الدفع (Stripe / بطاقات بنكية)، خطط اشتراك شهرية وسنوية، ونظام رصيد مهام (Pay-per-Task / API Credits)">
               </div>
             </div>
 
             <!-- Operational -->
-            <div class="feasibility-box" style="grid-column:1/-1;">
+            <div class="feasibility-box feasibility-box-full">
               <h4>⚖️ الجدوى التشغيلية والقانونية</h4>
-              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+              <div class="form-grid-2">
                 <div class="form-group">
                   <label class="form-label">التراخيص القانونية والموافقات</label>
                   <input type="text" class="form-control" id="feas-ops-permits" placeholder="سجل تجاري، اعتماد سلامة، رخص الترددات...">
@@ -804,16 +443,16 @@
             </div>
           </div>
 
-          <div style="display:flex; justify-content:space-between; margin-top:20px;">
+          <div class="wizard-nav-actions">
             <button class="btn btn-secondary" onclick="setWizardStep(3)">→ السابق</button>
             <button class="btn btn-primary" onclick="setWizardStep(5)">التالي: إرفاق المستند والإرسال ←</button>
           </div>
         </div>
 
         <!-- STEP 5: Attach Doc & Send to Database ("they can post doc") -->
-        <div id="wizard-step-5" style="display:none;">
-          <h3 style="margin-bottom:8px;">5. إرفاق مستند دراسة الجدوى والإرسال المباشر لقاعدة البيانات</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+        <div id="wizard-step-5" class="wizard-pane" style="display:none;">
+          <h3 class="wizard-pane-title">5. إرفاق مستند دراسة الجدوى والإرسال المباشر لقاعدة البيانات</h3>
+          <p class="wizard-pane-desc">
             يمكنك إرفاق ملف دراسة الجدوى الكامل (Word Doc، PDF، عرض تقديمي PPTX، أو Excel). سيُحفظ المشروع والمستند في قاعدة البيانات لتحكيمه من قِبل اللجنة حصرياً.
           </p>
 
@@ -823,22 +462,22 @@
             <div class="upload-dropzone" onclick="document.getElementById('doc-file-input').click()">
               <input type="file" id="doc-file-input" style="display:none;" accept=".pdf,.doc,.docx,.pptx,.xlsx,.zip" onchange="handleDocFileSelect(event)">
               <div class="upload-icon">📁</div>
-              <div style="font-weight:700; margin-bottom:4px;">اضغط هنا لاختيار ملف المستند من جهازك</div>
-              <div style="font-size:0.8rem; color:var(--text-dim);">يدعم صيغ PDF, DOCX, DOC, PPTX, XLSX حتى 20 ميغابايت</div>
+              <div class="upload-title">اضغط هنا لاختيار ملف المستند من جهازك</div>
+              <div class="upload-hint">يدعم صيغ PDF, DOCX, DOC, PPTX, XLSX حتى 20 ميغابايت</div>
             </div>
             <div id="attached-doc-display"></div>
           </div>
 
           <div id="wizard-review-summary" style="margin-top:24px;"></div>
 
-          <div style="background:rgba(2,132,199,0.1); border:1px solid rgba(2,132,199,0.3); border-radius:12px; padding:16px; margin-top:24px; display:flex; align-items:center; gap:12px;">
-            <span style="font-size:1.8rem;">🔒</span>
-            <div style="font-size:0.88rem; color:#bae6fd;">
+          <div class="confidential-banner">
+            <span class="confidential-icon">🔒</span>
+            <div class="confidential-text">
               <strong>حفظ سري ومؤمن:</strong> لن يظهر مشروعك أو مستندك لأي متسابقين آخرين على الموقع. سيتم إرساله مباشرة لقاعدة البيانات ليطلع عليه أعضاء لجنة التحكيم (Lajna) لمنح الدرجات واختيار الفائزين.
             </div>
           </div>
 
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:28px;">
+          <div class="wizard-nav-actions">
             <button class="btn btn-secondary" onclick="setWizardStep(4)">→ السابق (تعديل البيانات)</button>
             <button class="btn btn-primary btn-lg" onclick="postProposal()">
               💾 إرسال وحفظ في قاعدة البيانات (Submit to DB)
@@ -907,7 +546,7 @@
   <div class="modal-overlay" id="idea-modal">
     <div class="modal-content" style="max-width:600px;">
       <div class="modal-header">
-        <h3 id="modal-idea-heading" style="font-size:1.15rem;">💡 إدارة فكرة التحدي للمسابقة</h3>
+        <h3 id="modal-idea-heading">💡 إدارة فكرة التحدي للمسابقة</h3>
         <button class="modal-close" onclick="closeModal('idea-modal')">×</button>
       </div>
       <div class="modal-body">
@@ -1003,7 +642,7 @@
   <div class="modal-overlay" id="detail-modal">
     <div class="modal-content" style="max-width:880px;">
       <div class="modal-header">
-        <h3 style="font-size:1.15rem;">تفاصيل دراسة الجدوى والمستند المحفوظ في قاعدة البيانات</h3>
+        <h3>تفاصيل دراسة الجدوى والمستند المحفوظ في قاعدة البيانات</h3>
         <button class="modal-close" onclick="closeModal('detail-modal')">×</button>
       </div>
       <div class="modal-body" id="detail-modal-body"></div>
@@ -1017,7 +656,7 @@
   <div class="modal-overlay" id="eval-modal">
     <div class="modal-content" style="max-width:680px;">
       <div class="modal-header">
-        <h3 style="font-size:1.15rem; color:#a78bfa;">⚖️ نموذج تحكيم دراسة الجدوى والمستند - لجنة التحكيم</h3>
+        <h3 style="color:#a78bfa;">⚖️ نموذج تحكيم دراسة الجدوى والمستند - لجنة التحكيم</h3>
         <button class="modal-close" onclick="closeModal('eval-modal')">×</button>
       </div>
       <div class="modal-body" id="eval-modal-body"></div>
@@ -1033,14 +672,14 @@
 
   <!-- Footer -->
   <footer>
-    <div class="container" style="display:flex; justify-content:space-between; align-items:center;">
+    <div class="container footer-inner">
       <div>🏆 <strong>MLIC CHALLENGE</strong> © 2026 - منصة تحدي دراسات الجدوى وسوات مع تحكيم اللجنة ولائحة الفائزين</div>
-      <div style="color:var(--text-muted); font-size:0.8rem;">
+      <div class="footer-meta">
         🔒 Confidential Database Storage • PostgreSQL Ready
       </div>
     </div>
   </footer>
 
-  <script src="app.js?v=20261118_v4"></script>
+  <script src="app.js?v=20261124_v6"></script>
 </body>
 </html>
