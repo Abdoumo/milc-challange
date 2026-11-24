@@ -17,7 +17,7 @@ const state = {
   wizardCompetitionType: 'marketing_strategy',
   lajnaCompetitionFilter: 'all',
   leaderboardCompetitionTab: 'marketing_strategy',
-  lang: localStorage.getItem('agrivers_lang') || 'ar',
+  postAuthRedirectToSubmit: false,
 
   // Current uploaded document draft
   selectedDoc: null, // { filename, size, base64 }
@@ -125,15 +125,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function setupLanguage() {
-  document.documentElement.setAttribute('dir', state.lang === 'ar' ? 'rtl' : 'ltr');
-  document.documentElement.setAttribute('lang', state.lang);
-}
-
-function toggleLanguage() {
-  state.lang = state.lang === 'ar' ? 'en' : 'ar';
-  localStorage.setItem('agrivers_lang', state.lang);
-  setupLanguage();
-  renderApp();
+  localStorage.removeItem('agrivers_lang');
+  document.documentElement.setAttribute('dir', 'rtl');
+  document.documentElement.setAttribute('lang', 'ar');
 }
 
 async function checkAuth() {
@@ -179,14 +173,50 @@ async function loadInitialData() {
   }
 }
 
+// Shared helper to parse & deduplicate group members
+function parseGroupMembersList(rawMembers, leaderName = '') {
+  const list = [];
+  if (Array.isArray(rawMembers)) {
+    list.push(...rawMembers);
+  } else if (typeof rawMembers === 'string') {
+    list.push(...rawMembers.split(/[,،;؛\n]+/));
+  }
+
+  const seen = new Set();
+  const result = [];
+  const addUnique = (val) => {
+    const clean = String(val || '').trim();
+    if (!clean) return;
+    const key = clean.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(clean);
+    }
+  };
+
+  if (leaderName) addUnique(leaderName);
+  for (const item of list) addUnique(item);
+
+  return {
+    members: result,
+    formatted: result.join('، '),
+    count: result.length
+  };
+}
+
 // Auth Management
 async function logout() {
   state.token = null;
   state.currentUser = null;
   state.isLajnaOrAdmin = false;
+  state.postAuthRedirectToSubmit = false;
   localStorage.removeItem('agrivers_token');
   localStorage.removeItem('mlic_token');
-  showToast('Logged out', 'info');
+  const wizTeamName = document.getElementById('wiz-team-name');
+  const wizTeamMembers = document.getElementById('wiz-team-members');
+  if (wizTeamName) wizTeamName.value = '';
+  if (wizTeamMembers) wizTeamMembers.value = '';
+  showToast('تم تسجيل الخروج', 'info');
   await loadInitialData();
   renderApp();
 }
@@ -200,6 +230,20 @@ function navigateTo(view) {
 
 function setWizardStep(step) {
   if (step < 1 || step > 5) return;
+  if (state.wizardStep === 1 && step > 1) {
+    if (!state.currentUser || state.currentUser.role === 'lajna') {
+      showToast('🔒 يجب تسجيل الدخول بحساب مجموعة (2+ أعضاء) للمتابعة', 'error');
+      return;
+    }
+    const teamName = document.getElementById('wiz-team-name')?.value.trim();
+    const teamMembers = document.getElementById('wiz-team-members')?.value.trim();
+    const parsed = parseGroupMembersList(teamMembers);
+    if (!teamName || parsed.count < 2) {
+      showToast('⚠️ المشاركة للمجموعات فقط: أدخل اسم المجموعة وأسماء عضوين (2) مختلفين على الأقل مفصولين بفاصلة', 'error');
+      updateWizardGroupStatus();
+      return;
+    }
+  }
   state.wizardStep = step;
   renderSubmissionWizard();
   const wizCard = document.querySelector('#view-submit .wizard-card');
@@ -217,21 +261,17 @@ function getCompetitionMeta(type) {
     return {
       type: 'theme_idea',
       cssClass: 'comp-badge-theme',
-      shortLabel: state.lang === 'ar' ? '🌿 المسابقة 2 • أفضل فكرة في المحور' : '🌿 Comp 2 • Theme Idea',
-      title: state.lang === 'ar' ? 'المسابقة 2: أفضل فكرة مشروع ضمن محور' : 'Competition 2: Best Idea in Theme',
-      desc: state.lang === 'ar'
-        ? 'تطرح الإدارة محوراً عاماً (مثل: الطبيعة...)، ويتنافس المشاركون على ابتكار أفضل فكرة مشروع أصلية تخدم هذا المحور.'
-        : 'Admin provides a theme (e.g. Nature...), and participants pitch the best original project idea for that theme.'
+      shortLabel: '🌿 المسابقة 2 • أفضل فكرة في المحور',
+      title: 'المسابقة 2: أفضل فكرة مشروع ضمن محور',
+      desc: 'تطرح الإدارة محوراً عاماً (مثل: الطبيعة...)، ويتنافس المشاركون على ابتكار أفضل فكرة مشروع أصلية تخدم هذا المحور.'
     };
   }
   return {
     type: 'marketing_strategy',
     cssClass: 'comp-badge-marketing',
-    shortLabel: state.lang === 'ar' ? '🎯 المسابقة 1 • استراتيجية تسويق' : '🎯 Comp 1 • Marketing Strategy',
-    title: state.lang === 'ar' ? 'المسابقة 1: أفضل استراتيجية تسويق ودراسة جدوى' : 'Competition 1: Best Marketing Strategy & Study',
-    desc: state.lang === 'ar'
-      ? 'تطرح الإدارة فكرة مشروع متكاملة، ويتنافس المشاركون على تقديم أفضل استراتيجية تسويق ودراسة جدوى لإنجاحها.'
-      : 'Admin provides an idea, and participants submit the strongest marketing strategy and feasibility study.'
+    shortLabel: '🎯 المسابقة 1 • استراتيجية تسويق',
+    title: 'المسابقة 1: أفضل استراتيجية تسويق ودراسة جدوى',
+    desc: 'تطرح الإدارة فكرة مشروع متكاملة، ويتنافس المشاركون على تقديم أفضل استراتيجية تسويق ودراسة جدوى لإنجاحها.'
   };
 }
 
@@ -262,17 +302,32 @@ function setLeaderboardCompetition(type) {
 function selectChallengeForSubmission(challengeId) {
   const ch = state.challenges.find(c => c.id === challengeId);
   if (ch && ch.is_open === 0) {
-    showToast(state.lang === 'ar' ? '⏳ محور المسابقة الثانية بانتظار الإعلان الرسمي من الإدارة قريباً.' : '⏳ This theme is coming soon once announced by Admin.', 'info');
+    showToast('⏳ محور المسابقة الثانية بانتظار الإعلان الرسمي من الإدارة قريباً.', 'info');
     return;
   }
   state.wizardCompetitionType = ch?.competition_type || 'marketing_strategy';
   state.wizardChallengeId = challengeId;
   state.wizardStep = 1;
+
+  if (!state.currentUser) {
+    state.postAuthRedirectToSubmit = true;
+    navigateTo('submit');
+    openAuthModal('register');
+    showToast('🔒 المشاركة مخصصة للمجموعات المسجلة فقط (2+ أعضاء). سجّل مجموعتك أو سجّل الدخول للمتابعة!', 'info');
+    return;
+  }
+
+  if (state.currentUser.role === 'lajna') {
+    navigateTo('submit');
+    showToast('⚖️ حسابات لجنة التحكيم مخصصة للتقييم فقط. للمشاركة يُرجى التسجيل بحساب مجموعة.', 'info');
+    return;
+  }
+
   navigateTo('submit');
   showToast(
     state.wizardCompetitionType === 'theme_idea'
-      ? (state.lang === 'ar' ? 'تم اختيار المحور! اكتب فكرتك المبتكرة وأكمل الدراسة أدناه.' : 'Theme selected! Submit your best idea below.')
-      : (state.lang === 'ar' ? 'تم اختيار الفكرة! قدّم استراتيجية التسويق ودراسة الجدوى أدناه.' : 'Challenge selected! Complete your marketing strategy and feasibility study below.'),
+      ? 'تم اختيار المحور! اكتب فكرتك المبتكرة وأكمل الدراسة أدناه.'
+      : 'تم اختيار الفكرة! قدّم استراتيجية التسويق ودراسة الجدوى أدناه.',
     'success'
   );
 }
@@ -350,7 +405,7 @@ function handleDocFileSelect(event) {
   }
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = function (e) {
     state.selectedDoc = {
       filename: file.name,
       size: file.size,
@@ -395,24 +450,36 @@ function removeAttachedDoc() {
 // Submit Proposal Directly to Database (Confidential - for Lajna review)
 async function postProposal() {
   if (!state.currentUser) {
+    state.postAuthRedirectToSubmit = true;
     openAuthModal('login');
-    showToast('Please sign in or register to submit your project to the database', 'info');
+    showToast('🔒 يرجى تسجيل الدخول بحساب مجموعة لتقديم الدراسة إلى قاعدة البيانات', 'info');
+    return;
+  }
+
+  if (state.currentUser.role === 'lajna') {
+    showToast('⚖️ حسابات لجنة التحكيم مخصصة للتقييم فقط ولا يمكنها المشاركة كمتسابق.', 'error');
     return;
   }
 
   const challengeId = document.getElementById('wizard-challenge-select')?.value || state.wizardChallengeId;
   const title = document.getElementById('wiz-title')?.value.trim();
   const pitch = document.getElementById('wiz-pitch')?.value.trim();
-  const teamName = document.getElementById('wiz-team-name')?.value.trim();
-  const teamMembers = document.getElementById('wiz-team-members')?.value.trim();
+  const teamName = (document.getElementById('wiz-team-name')?.value || state.currentUser.group_name || '').trim();
+  const teamMembersRaw = (document.getElementById('wiz-team-members')?.value || state.currentUser.group_members || '').trim();
+  const parsedGroup = parseGroupMembersList(teamMembersRaw);
 
   if (!challengeId) {
-    showToast('Please select a Challenge Track', 'error');
+    showToast('يرجى اختيار الفكرة أو المحور من القائمة', 'error');
     setWizardStep(1);
     return;
   }
   if (!title || !pitch) {
-    showToast('Title and Elevator Pitch are required', 'error');
+    showToast('يرجى إدخال عنوان المشروع والملخص التنفيذي', 'error');
+    setWizardStep(1);
+    return;
+  }
+  if (!teamName || parsedGroup.count < 2) {
+    showToast('⚠️ المشاركة مخصصة للمجموعات فقط: أدخل اسم المجموعة وأسماء عضوين (2) مختلفين على الأقل.', 'error');
     setWizardStep(1);
     return;
   }
@@ -424,7 +491,7 @@ async function postProposal() {
   // Upload document if attached
   if (state.selectedDoc) {
     try {
-      showToast('Uploading document to database store...', 'info');
+      showToast('جاري رفع المستند إلى قاعدة البيانات...', 'info');
       const uploadRes = await api('/api/upload-doc', {
         method: 'POST',
         body: JSON.stringify({
@@ -436,7 +503,7 @@ async function postProposal() {
       docName = uploadRes.document_name;
       docSize = uploadRes.document_size;
     } catch (e) {
-      showToast('Failed to upload document', 'error');
+      showToast('فشل رفع المستند المرفق', 'error');
       return;
     }
   }
@@ -475,8 +542,8 @@ async function postProposal() {
     challenge_id: challengeId,
     title,
     pitch,
-    team_name: teamName || state.currentUser.name,
-    team_members: teamMembers || state.currentUser.name,
+    team_name: teamName,
+    team_members: parsedGroup.formatted,
     target_audience: state.form.target_audience,
     swot: state.form.swot,
     feasibility: state.form.feasibility,
@@ -492,7 +559,7 @@ async function postProposal() {
       body: JSON.stringify(payload)
     });
 
-    showToast('🔒 تم إرسال وحفظ دراسة الجدوى في قاعدة البيانات بنجاح لتحكيم اللجنة!', 'success');
+    showToast('🔒 تم إرسال وحفظ دراسة المجموعة في قاعدة البيانات بنجاح لتحكيم اللجنة!', 'success');
     state.selectedDoc = null;
     await loadInitialData();
     navigateTo('my-submission');
@@ -563,7 +630,6 @@ async function toggleWinnersAnnouncement() {
 function updateIdeaModalLabels() {
   const type = document.getElementById('modal-idea-type')?.value || 'marketing_strategy';
   const isTheme = type === 'theme_idea';
-  const isAr = state.lang === 'ar';
 
   const lblTitle = document.getElementById('modal-idea-label-title');
   const lblCat = document.getElementById('modal-idea-label-category');
@@ -572,20 +638,20 @@ function updateIdeaModalLabels() {
   const lblOut = document.getElementById('modal-idea-label-outcomes');
 
   if (lblTitle) lblTitle.textContent = isTheme
-    ? (isAr ? 'اسم المحور الرسمي (Theme) *' : 'Theme Title (e.g. Nature & Sustainability) *')
-    : (isAr ? 'عنوان فكرة المشروع / التحدي *' : 'Challenge Idea Title *');
+    ? 'اسم المحور الرسمي (Theme) *'
+    : 'عنوان فكرة المشروع / التحدي *';
   if (lblCat) lblCat.textContent = isTheme
-    ? (isAr ? 'مجال المحور أو وسومه' : 'Theme Category / Domain')
-    : (isAr ? 'التصنيف أو المجال' : 'Category / Sector');
+    ? 'مجال المحور أو وسومه'
+    : 'التصنيف أو المجال';
   if (lblSum) lblSum.textContent = isTheme
-    ? (isAr ? 'نبذة عن محور المسابقة الثانية' : 'Theme Overview')
-    : (isAr ? 'نبذة ملخصة عن الفكرة' : 'Idea Summary');
+    ? 'نبذة عن محور المسابقة الثانية'
+    : 'نبذة ملخصة عن الفكرة';
   if (lblProb) lblProb.textContent = isTheme
-    ? (isAr ? 'وصف المحور ومتطلبات الأفكار المقبولة *' : 'Theme Description & Guidelines *')
-    : (isAr ? 'المشكلة المطروحة والمطلوب حلها *' : 'Problem Statement & Marketing Challenge *');
+    ? 'وصف المحور ومتطلبات الأفكار المقبولة *'
+    : 'المشكلة المطروحة والمطلوب حلها *';
   if (lblOut) lblOut.textContent = isTheme
-    ? (isAr ? 'معايير التقييم والمستندات المطلوبة' : 'Expected Deliverables & Doc')
-    : (isAr ? 'مخرجات استراتيجية التسويق والجدوى المطلوبة' : 'Expected Marketing Strategy & Deliverables');
+    ? 'معايير التقييم والمستندات المطلوبة'
+    : 'مخرجات استراتيجية التسويق والجدوى المطلوبة';
 }
 
 async function saveChallengeIdea() {
@@ -600,7 +666,7 @@ async function saveChallengeIdea() {
   const reward = document.getElementById('modal-idea-reward')?.value.trim();
 
   if (!title || !problem) {
-    showToast(state.lang === 'ar' ? 'العنوان والوصف مطلوبان' : 'Title and Description are required', 'error');
+    showToast('العنوان والوصف مطلوبان', 'error');
     return;
   }
 
@@ -643,8 +709,8 @@ function openAddIdeaModal(defaultType = 'marketing_strategy') {
   document.getElementById('modal-idea-outcomes').value = '';
   document.getElementById('modal-idea-reward').value = '';
   document.getElementById('modal-idea-heading').textContent = compType === 'theme_idea'
-    ? (state.lang === 'ar' ? '🌿 إضافة محور جديد (المسابقة الثانية)' : 'Add Competition 2 Theme')
-    : (state.lang === 'ar' ? '🎯 إضافة فكرة جديدة (المسابقة الأولى)' : 'Add Competition 1 Idea');
+    ? '🌿 إضافة محور جديد (المسابقة الثانية)'
+    : '🎯 إضافة فكرة جديدة (المسابقة الأولى)';
   updateIdeaModalLabels();
   openModal('idea-modal');
 }
@@ -664,8 +730,8 @@ function openEditIdeaModal(challengeId) {
   document.getElementById('modal-idea-outcomes').value = ch.expected_outcomes;
   document.getElementById('modal-idea-reward').value = ch.reward_or_grant;
   document.getElementById('modal-idea-heading').textContent = compType === 'theme_idea'
-    ? (state.lang === 'ar' ? '🌿 تعديل / تعيين محور المسابقة الثانية' : 'Edit Competition 2 Theme')
-    : (state.lang === 'ar' ? '✏️ تعديل فكرة المسابقة الأولى' : 'Edit Competition 1 Idea');
+    ? '🌿 تعديل / تعيين محور المسابقة الثانية'
+    : '✏️ تعديل فكرة المسابقة الأولى';
   updateIdeaModalLabels();
   openModal('idea-modal');
 }
@@ -681,23 +747,149 @@ function closeModal(id) {
   if (modal) modal.classList.remove('open');
 }
 
+function toggleRegisterRoleUI() {
+  const role = document.getElementById('reg-role')?.value || 'participant';
+  const groupFields = document.getElementById('reg-group-fields');
+  const orgField = document.getElementById('reg-org-field');
+  const nameLabel = document.getElementById('reg-name-label');
+  const groupNameInput = document.getElementById('reg-group-name');
+  const member2Input = document.getElementById('reg-member-2');
+
+  const isGroup = role === 'participant';
+  if (groupFields) groupFields.style.display = isGroup ? 'block' : 'none';
+  if (orgField) orgField.style.display = isGroup ? 'none' : 'block';
+  if (nameLabel) {
+    nameLabel.textContent = isGroup ? 'اسم قائد المجموعة (العضو الأول) *' : 'الاسم الكامل *';
+  }
+  if (groupNameInput) groupNameInput.required = isGroup;
+  if (member2Input) member2Input.required = isGroup;
+  if (isGroup) updateRegMembersCount();
+}
+
+function addRegisterMemberInput() {
+  const list = document.getElementById('reg-extra-members-list');
+  if (!list) return;
+  const count = list.querySelectorAll('.reg-member-row').length + 2;
+  const row = document.createElement('div');
+  row.className = 'reg-member-row';
+  row.innerHTML = `
+    <input type="text" class="form-control reg-member-input" placeholder="اسم العضو رقم ${count}" oninput="updateRegMembersCount()">
+    <button type="button" class="btn-remove-member" onclick="removeRegisterMemberInput(this)" title="حذف العضو">×</button>
+  `;
+  list.appendChild(row);
+  updateRegMembersCount();
+}
+
+function removeRegisterMemberInput(btn) {
+  const row = btn.closest('.reg-member-row');
+  if (row) row.remove();
+  updateRegMembersCount();
+}
+
+function getRegisterExtraMembers() {
+  return Array.from(document.querySelectorAll('#reg-extra-members-list .reg-member-input'))
+    .map(el => el.value.trim())
+    .filter(Boolean);
+}
+
+function updateRegMembersCount() {
+  const badge = document.getElementById('reg-members-count-badge');
+  if (!badge) return;
+  const leaderName = document.getElementById('reg-name')?.value.trim() || '';
+  const parsed = parseGroupMembersList(getRegisterExtraMembers(), leaderName);
+  const valid = parsed.count >= 2;
+  badge.classList.toggle('valid', valid);
+  badge.textContent = valid
+    ? `✓ المجموعة مكتملة (${parsed.count} أعضاء)`
+    : `👥 الأعضاء: ${parsed.count} / 2 كحد أدنى`;
+}
+
+function resetRegisterGroupForm() {
+  const form = document.getElementById('modal-register-form');
+  if (form) form.reset();
+  const list = document.getElementById('reg-extra-members-list');
+  if (list) {
+    list.innerHTML = `
+      <div class="reg-member-row">
+        <input type="text" class="form-control reg-member-input" id="reg-member-2" required placeholder="اسم العضو الثاني (إلزامي) *" oninput="updateRegMembersCount()">
+      </div>
+    `;
+  }
+  toggleRegisterRoleUI();
+}
+
+function renderProfileModalContent() {
+  const container = document.getElementById('modal-profile-view');
+  if (!container || !state.currentUser) return;
+  const u = state.currentUser;
+  const roleLabel = u.role === 'admin' ? 'منظم المسابقة (Admin)' : u.role === 'lajna' ? 'عضو لجنة التحكيم (Lajna)' : 'مجموعة مشاركة (Group)';
+  const groupName = u.group_name || u.organization || '';
+  const parsedMembers = parseGroupMembersList(u.group_members || '');
+
+  container.innerHTML = `
+    <div class="profile-card">
+      <div class="profile-row">
+        <div class="profile-row-label">نوع الحساب</div>
+        <div style="font-weight:700;">${roleLabel}</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-label">${u.role === 'participant' ? 'قائد المجموعة والبريد' : 'الاسم والبريد الإلكتروني'}</div>
+        <div style="font-weight:700;">${u.name}</div>
+        <div style="font-size:0.84rem; color:var(--text-muted);">${u.email}</div>
+      </div>
+      ${groupName ? `
+        <div class="profile-row">
+          <div class="profile-row-label">${u.role === 'participant' ? 'اسم المجموعة المسجلة' : 'الجهة / المؤسسة'}</div>
+          <div style="font-weight:700; color:#34d399;">👥 ${groupName}</div>
+          ${parsedMembers.count > 0 ? `
+            <div class="profile-members-chips">
+              ${parsedMembers.members.map(m => `<span class="profile-member-chip">👤 ${m}</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:4px;">
+        ${u.role !== 'lajna' ? `
+          <button type="button" class="btn btn-primary" style="flex:1;" onclick="closeModal('auth-modal'); navigateTo('submit');">
+            🚀 تقديم دراسة باسم المجموعة
+          </button>
+        ` : ''}
+        <button type="button" class="btn btn-secondary" onclick="logout(); closeModal('auth-modal');">
+          تسجيل الخروج
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 function openAuthModal(mode = 'login') {
   const loginForm = document.getElementById('modal-login-form');
   const regForm = document.getElementById('modal-register-form');
+  const profileView = document.getElementById('modal-profile-view');
   const tabLogin = document.getElementById('auth-tab-login');
   const tabReg = document.getElementById('auth-tab-reg');
+  const tabProfile = document.getElementById('auth-tab-profile');
 
-  if (mode === 'login') {
-    loginForm.style.display = 'block';
-    regForm.style.display = 'none';
-    tabLogin.classList.add('active');
-    tabReg.classList.remove('active');
-  } else {
-    loginForm.style.display = 'none';
-    regForm.style.display = 'block';
-    tabReg.classList.add('active');
-    tabLogin.classList.remove('active');
+  if (tabProfile) {
+    tabProfile.style.display = state.currentUser ? 'inline-flex' : 'none';
   }
+
+  const effectiveMode = mode === 'profile' && !state.currentUser ? 'login' : mode;
+
+  if (loginForm) loginForm.style.display = effectiveMode === 'login' ? 'block' : 'none';
+  if (regForm) regForm.style.display = effectiveMode === 'register' ? 'block' : 'none';
+  if (profileView) profileView.style.display = effectiveMode === 'profile' ? 'block' : 'none';
+
+  tabLogin?.classList.toggle('active', effectiveMode === 'login');
+  tabReg?.classList.toggle('active', effectiveMode === 'register');
+  tabProfile?.classList.toggle('active', effectiveMode === 'profile');
+
+  if (effectiveMode === 'register') {
+    toggleRegisterRoleUI();
+  } else if (effectiveMode === 'profile') {
+    renderProfileModalContent();
+  }
+
   openModal('auth-modal');
 }
 
@@ -721,7 +913,7 @@ function openEvaluationModal(submissionId) {
 function renderApp() {
   renderNavbar();
 
-  ['challenges', 'submit', 'my-submission', 'lajna', 'admin-lajna', 'leaderboard', 'db-info'].forEach(v => {
+  ['challenges', 'submit', 'my-submission', 'lajna', 'admin-lajna', 'leaderboard'].forEach(v => {
     const el = document.getElementById(`view-${v}`);
     if (el) el.style.display = state.activeView === v ? 'block' : 'none';
   });
@@ -732,21 +924,20 @@ function renderApp() {
   if (state.activeView === 'lajna') renderLajnaView();
   if (state.activeView === 'admin-lajna') renderAdminLajnaView();
   if (state.activeView === 'leaderboard') renderLeaderboardView();
-  if (state.activeView === 'db-info') renderDbStatusView();
 }
 
 function renderNavbar() {
   const userContainer = document.getElementById('nav-user-container');
   if (!userContainer) return;
 
-  // Update Nav Labels for Language
+  // Ensure Arabic Nav Labels
   const navLabels = {
-    'challenges': state.lang === 'ar' ? 'المسابقتان' : 'Competitions',
-    'submit': state.lang === 'ar' ? 'تقديم دراسة' : 'Submit Entry',
-    'my-sub': state.lang === 'ar' ? 'مشاركاتي' : 'My Entries',
-    'lajna': state.lang === 'ar' ? 'لجنة التحكيم' : 'Jury Suite',
-    'leaderboard': state.lang === 'ar' ? 'الفائزون' : 'Leaderboard',
-    'admin-approvals': state.lang === 'ar' ? 'اعتماد المحكمين' : 'Approvals'
+    'challenges': 'المسابقتان',
+    'submit': 'تقديم دراسة',
+    'my-sub': 'مشاركاتي',
+    'lajna': 'لجنة التحكيم',
+    'leaderboard': 'الفائزون',
+    'admin-approvals': 'اعتماد المحكمين'
   };
 
   for (const [key, text] of Object.entries(navLabels)) {
@@ -754,18 +945,10 @@ function renderNavbar() {
     if (el) el.textContent = text;
   }
 
-  // Update Tagline
+  // Brand Tagline
   const taglineEl = document.getElementById('brand-tagline-text');
   if (taglineEl) {
-    taglineEl.textContent = state.lang === 'ar' ? 'منصة دراسات الجدوى والتحكيم الرسمي' : 'Feasibility & Jury Platform';
-  }
-
-  // Language toggle pill active state
-  const arLabel = document.getElementById('lang-ar-label');
-  const enLabel = document.getElementById('lang-en-label');
-  if (arLabel && enLabel) {
-    arLabel.classList.toggle('active', state.lang === 'ar');
-    enLabel.classList.toggle('active', state.lang === 'en');
+    taglineEl.textContent = 'منصة دراسات الجدوى والتحكيم الرسمي';
   }
 
   document.querySelectorAll('.nav-item').forEach(el => {
@@ -800,32 +983,26 @@ function renderNavbar() {
     mySubNav.style.display = state.currentUser ? 'flex' : 'none';
   }
 
-  // Update mobile drawer DB status label
-  const mobileDbLabel = document.getElementById('mobile-db-label');
-  if (mobileDbLabel) {
-    mobileDbLabel.textContent = state.lang === 'ar'
-      ? 'حالة قاعدة البيانات (PostgreSQL)'
-      : 'Database Status (PostgreSQL)';
-  }
-
   const mobileUserDrawer = document.getElementById('mobile-drawer-user');
 
   if (state.currentUser) {
-    const initial = (state.currentUser.name || 'U').charAt(0).toUpperCase();
+    const displayTitle = state.currentUser.role === 'participant' && state.currentUser.group_name
+      ? state.currentUser.group_name
+      : state.currentUser.name;
+    const initial = (displayTitle || 'U').charAt(0).toUpperCase();
     const role = state.currentUser.role;
     const roleBg = role === 'admin' ? 'role-admin-bg' : role === 'lajna' ? 'role-lajna-bg' : 'role-participant-bg';
-    const roleLabel = state.lang === 'ar' 
-      ? (role === 'admin' ? 'المنظم' : role === 'lajna' ? 'محكّم' : 'متسابق')
-      : role;
+    const roleLabel = role === 'admin' ? 'المنظم' : role === 'lajna' ? 'محكّم' : 'مجموعة';
+    const shortDisplay = displayTitle.split(' ')[0];
     userContainer.innerHTML = `
-      <div class="user-pill" onclick="openAuthModal('profile')" title="${state.currentUser.name} (${role})">
+      <div class="user-pill" onclick="openAuthModal('profile')" title="${displayTitle} (${roleLabel})">
         <div class="user-avatar-circle ${roleBg}">${initial}</div>
         <div class="user-pill-info">
-          <span class="user-pill-name">${state.currentUser.name.split(' ')[0]}</span>
+          <span class="user-pill-name">${shortDisplay}</span>
           <span class="role-badge role-${role}">${roleLabel}</span>
         </div>
       </div>
-      <button class="nav-logout-btn" onclick="logout()" title="${state.lang === 'ar' ? 'تسجيل الخروج' : 'Logout'}">
+      <button class="nav-logout-btn" onclick="logout()" title="تسجيل الخروج">
         <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
       </button>
     `;
@@ -835,13 +1012,13 @@ function renderNavbar() {
           <div class="mobile-user-main" onclick="openAuthModal('profile'); toggleMobileMenu(false);">
             <div class="user-avatar-circle ${roleBg}">${initial}</div>
             <div class="mobile-user-text">
-              <span class="mobile-user-name">${state.currentUser.name}</span>
+              <span class="mobile-user-name">${displayTitle}</span>
               <span class="role-badge role-${role}">${roleLabel}</span>
             </div>
           </div>
           <button type="button" class="mobile-logout-btn" onclick="logout(); toggleMobileMenu(false);">
             <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/></svg>
-            <span>${state.lang === 'ar' ? 'خروج' : 'Logout'}</span>
+            <span>خروج</span>
           </button>
         </div>
       `;
@@ -849,10 +1026,10 @@ function renderNavbar() {
   } else {
     userContainer.innerHTML = `
       <button class="nav-btn-ghost" onclick="openAuthModal('login')">
-        ${state.lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+        تسجيل الدخول
       </button>
       <button class="nav-btn-glow" onclick="openAuthModal('register')">
-        <span>${state.lang === 'ar' ? 'إنشاء حساب' : 'Register'}</span>
+        <span>تسجيل مجموعة</span>
         <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
       </button>
     `;
@@ -860,10 +1037,10 @@ function renderNavbar() {
       mobileUserDrawer.innerHTML = `
         <div class="mobile-auth-actions">
           <button type="button" class="btn btn-secondary btn-sm mobile-auth-btn" onclick="openAuthModal('login'); toggleMobileMenu(false);">
-            ${state.lang === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+            تسجيل الدخول
           </button>
           <button type="button" class="btn btn-primary btn-sm mobile-auth-btn" onclick="openAuthModal('register'); toggleMobileMenu(false);">
-            ${state.lang === 'ar' ? 'إنشاء حساب جديد' : 'Create Account'}
+            تسجيل مجموعة جديدة
           </button>
         </div>
       `;
@@ -884,8 +1061,8 @@ function renderChallengesView() {
 
   const heroIdeasEl = document.getElementById('hero-ideas-count');
   const heroThemesEl = document.getElementById('hero-themes-count');
-  if (heroIdeasEl) heroIdeasEl.textContent = `🎯 ${comp1List.length} ${state.lang === 'ar' ? 'أفكار' : 'Ideas'}`;
-  if (heroThemesEl) heroThemesEl.textContent = comp2OpenCount > 0 ? `🌿 ${comp2OpenCount} ${state.lang === 'ar' ? 'محور متاح' : 'Themes'}` : (state.lang === 'ar' ? '🌿 قريباً' : '🌿 Soon');
+  if (heroIdeasEl) heroIdeasEl.textContent = `🎯 ${comp1List.length} أفكار`;
+  if (heroThemesEl) heroThemesEl.textContent = comp2OpenCount > 0 ? `🌿 ${comp2OpenCount} محور متاح` : '🌿 قريباً';
 
   if (!grid) return;
 
@@ -897,22 +1074,22 @@ function renderChallengesView() {
     overviewGrid.innerHTML = `
       <div class="comp-overview-card comp-overview-1 ${state.activeCompetitionFilter === 'marketing_strategy' ? 'selected' : ''}" onclick="setCompetitionFilter('${state.activeCompetitionFilter === 'marketing_strategy' ? 'all' : 'marketing_strategy'}')">
         <div class="comp-overview-top">
-          <span class="comp-pill comp-pill-1">🎯 ${state.lang === 'ar' ? 'المسابقة الأولى' : 'Competition 1'}</span>
-          <span class="comp-count-tag">${comp1List.length} ${state.lang === 'ar' ? 'أفكار مطروحة' : 'Ideas'}</span>
+          <span class="comp-pill comp-pill-1">🎯 المسابقة الأولى</span>
+          <span class="comp-count-tag">${comp1List.length} أفكار مطروحة</span>
         </div>
-        <h3>${state.lang === 'ar' ? 'أفضل استراتيجية تسويق ودراسة جدوى' : 'Best Marketing Strategy & Feasibility'}</h3>
-        <p>${state.lang === 'ar' ? 'نطرح لكم فكرة المشروع، وتتنافسون على تقديم أقوى خطة تسويق ونموذج ربحي ودراسة جدوى لتحويلها لنجاح حقيقي.' : 'We offer the core project idea, and you compete to craft the winning marketing strategy and feasibility study.'}</p>
+        <h3>أفضل استراتيجية تسويق ودراسة جدوى</h3>
+        <p>نطرح لكم فكرة المشروع، وتتنافسون على تقديم أقوى خطة تسويق ونموذج ربحي ودراسة جدوى لتحويلها لنجاح حقيقي.</p>
       </div>
 
       <div class="comp-overview-card comp-overview-2 ${state.activeCompetitionFilter === 'theme_idea' ? 'selected' : ''}" onclick="setCompetitionFilter('${state.activeCompetitionFilter === 'theme_idea' ? 'all' : 'theme_idea'}')">
         <div class="comp-overview-top">
-          <span class="comp-pill comp-pill-2">🌿 ${state.lang === 'ar' ? 'المسابقة الثانية' : 'Competition 2'}</span>
+          <span class="comp-pill comp-pill-2">🌿 المسابقة الثانية</span>
           <span class="comp-count-tag ${comp2OpenCount === 0 ? 'tag-tba' : ''}">
-            ${comp2OpenCount > 0 ? `${comp2OpenCount} ${state.lang === 'ar' ? 'محور مفتوح' : 'Open'}` : (state.lang === 'ar' ? '⏳ المحور قريباً' : '⏳ Theme TBA')}
+            ${comp2OpenCount > 0 ? `${comp2OpenCount} محور مفتوح` : '⏳ المحور قريباً'}
           </span>
         </div>
-        <h3>${state.lang === 'ar' ? 'أفضل فكرة مشروع ضمن محور الإدارة' : 'Best Original Idea in Admin Theme'}</h3>
-        <p>${state.lang === 'ar' ? 'تحدّد الإدارة محوراً عاماً (مثل: الطبيعة والاستدامة...)، وتبتكرون أفضل فكرة مشروع تخدم هذا المحور.' : 'Admin announces a general theme (e.g. Nature & Sustainability...), and you pitch your best original idea within it.'}</p>
+        <h3>أفضل فكرة مشروع ضمن محور الإدارة</h3>
+        <p>تحدّد الإدارة محوراً عاماً (مثل: الطبيعة والاستدامة...)، وتبتكرون أفضل فكرة مشروع تخدم هذا المحور.</p>
       </div>
     `;
   }
@@ -920,13 +1097,13 @@ function renderChallengesView() {
   if (filterBar) {
     filterBar.innerHTML = `
       <button type="button" class="filter-chip ${state.activeCompetitionFilter === 'all' ? 'active' : ''}" onclick="setCompetitionFilter('all')">
-        ${state.lang === 'ar' ? 'عرض المسابقتين' : 'All Competitions'} (${state.challenges.length})
+        عرض المسابقتين (${state.challenges.length})
       </button>
       <button type="button" class="filter-chip ${state.activeCompetitionFilter === 'marketing_strategy' ? 'active' : ''}" onclick="setCompetitionFilter('marketing_strategy')">
-        🎯 ${state.lang === 'ar' ? 'المسابقة 1: استراتيجية التسويق' : 'Comp 1: Marketing Strategy'} (${comp1List.length})
+        🎯 المسابقة 1: استراتيجية التسويق (${comp1List.length})
       </button>
       <button type="button" class="filter-chip ${state.activeCompetitionFilter === 'theme_idea' ? 'active' : ''}" onclick="setCompetitionFilter('theme_idea')">
-        🌿 ${state.lang === 'ar' ? 'المسابقة 2: أفكار المحاور' : 'Comp 2: Theme Ideas'} (${comp2List.length})
+        🌿 المسابقة 2: أفكار المحاور (${comp2List.length})
       </button>
     `;
   }
@@ -950,12 +1127,12 @@ function renderChallengesView() {
           <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
             <span class="comp-type-badge ${meta.cssClass}">${meta.shortLabel}</span>
             <span class="status-pill ${isOpen ? 'status-open' : 'status-tba'}">
-              ${isOpen ? (state.lang === 'ar' ? '🟢 مفتوح للتقديم' : '🟢 Open') : (state.lang === 'ar' ? '⏳ سيتم تحديد المحور لاحقاً' : '⏳ Theme TBA')}
+              ${isOpen ? '🟢 مفتوح للتقديم' : '⏳ سيتم تحديد المحور لاحقاً'}
             </span>
           </div>
           ${isAdminOrLajna ? `
             <button class="btn btn-outline btn-sm" onclick="openEditIdeaModal('${c.id}')" title="تعديل">
-              ✏️ ${!isOpen && isTheme ? (state.lang === 'ar' ? 'تعيين وفتح المحور' : 'Set & Open Theme') : (state.lang === 'ar' ? 'تعديل' : 'Edit')}
+              ✏️ ${!isOpen && isTheme ? 'تعيين وفتح المحور' : 'تعديل'}
             </button>
           ` : ''}
         </div>
@@ -968,29 +1145,29 @@ function renderChallengesView() {
         <p class="challenge-summary">${c.summary}</p>
 
         <div class="challenge-details-box">
-          <strong>${isTheme ? (state.lang === 'ar' ? '🌿 تفاصيل المحور والمطلوب من الأفكار:' : 'Theme Details & Guidelines:') : (state.lang === 'ar' ? '⚠️ المشكلة المطروحة والمطلوب تسويقه:' : 'The Problem & Marketing Challenge:')}</strong>
+          <strong>${isTheme ? '🌿 تفاصيل المحور والمطلوب من الأفكار:' : '⚠️ المشكلة المطروحة والمطلوب تسويقه:'}</strong>
           <div style="white-space:pre-line;">${c.problem_statement}</div>
         </div>
 
         <div class="challenge-details-box">
-          <strong>🎯 ${state.lang === 'ar' ? 'المخرجات والمستند المطلوب:' : 'Expected Deliverables & Doc:'}</strong>
+          <strong>🎯 المخرجات والمستند المطلوب:</strong>
           <div style="white-space:pre-line;">${c.expected_outcomes}</div>
         </div>
       </div>
 
       <div class="challenge-footer">
         <span class="privacy-badge">
-          🔒 ${state.lang === 'ar' ? 'التقديم سري ويذهب للجنة فقط' : 'Private to Lajna DB'}
+          🔒 للمجموعات المسجلة (2+ أعضاء) • سري للجنة
         </span>
         ${isOpen ? `
           <button class="btn ${isTheme ? 'btn-lajna' : 'btn-primary'} btn-sm" onclick="selectChallengeForSubmission('${c.id}')">
-            🚀 ${isTheme
-              ? (state.lang === 'ar' ? 'قدّم فكرتك في هذا المحور' : 'Pitch Your Idea in Theme')
-              : (state.lang === 'ar' ? 'قدّم استراتيجية التسويق والجدوى' : 'Submit Marketing Strategy')}
+            ${!state.currentUser
+          ? '🔑 سجّل مجموعتك للمشاركة'
+          : (isTheme ? '🚀 قدّم فكرتك في هذا المحور' : '🚀 قدّم استراتيجية التسويق والجدوى')}
           </button>
         ` : `
           <button class="btn btn-secondary btn-sm" disabled style="opacity:0.7; cursor:not-allowed;">
-            ⏳ ${state.lang === 'ar' ? 'بانتظار تحديد المحور من الإدارة' : 'Awaiting Theme Announcement'}
+            ⏳ بانتظار تحديد المحور من الإدارة
           </button>
         `}
       </div>
@@ -999,26 +1176,113 @@ function renderChallengesView() {
   }).join('');
 }
 
+function updateWizardGroupStatus() {
+  const banner = document.getElementById('wizard-group-banner');
+  if (!banner) return;
+  const teamName = document.getElementById('wiz-team-name')?.value.trim() || '';
+  const teamMembersRaw = document.getElementById('wiz-team-members')?.value.trim() || '';
+  const parsed = parseGroupMembersList(teamMembersRaw);
+
+  banner.style.display = 'flex';
+  if (teamName && parsed.count >= 2) {
+    banner.className = 'wizard-group-banner valid';
+    banner.innerHTML = `
+      <span>✓ المشاركة باسم المجموعة: <strong>${teamName}</strong> (${parsed.count} أعضاء مسجلين)</span>
+      <span style="font-size:0.78rem; opacity:0.9;">👥 ${parsed.formatted}</span>
+    `;
+  } else {
+    banner.className = 'wizard-group-banner warning';
+    banner.innerHTML = `
+      <span>⚠️ المشاركة للمجموعات المسجلة فقط: أدخل <strong>اسم المجموعة</strong> و<strong>عضوين (2) مختلفين على الأقل</strong> مفصولين بفاصلة (،).</span>
+      <span style="font-size:0.78rem;">الأعضاء الحاليون: ${parsed.count} / 2</span>
+    `;
+  }
+}
+
 // 2. Submission Wizard
 function renderSubmissionWizard() {
+  const gateEl = document.getElementById('wizard-auth-gate');
+  const mainCard = document.getElementById('wizard-main-card');
+
+  if (!state.currentUser) {
+    if (mainCard) mainCard.style.display = 'none';
+    if (gateEl) {
+      gateEl.style.display = 'block';
+      gateEl.innerHTML = `
+        <div class="empty-state-card wizard-auth-gate-card">
+          <div style="font-size:3rem; margin-bottom:12px;">🔒👥</div>
+          <h2>المشاركة مخصصة للمجموعات المسجلة فقط</h2>
+          <p style="color:var(--text-muted); max-width:540px; margin:12px auto 0 auto; line-height:1.8;">
+            يمكن لأي فريق التسجيل مجاناً وبشكل فوري (دون انتظار موافقة مسبقة)، بشرط تكوين <strong>مجموعة من عضوين (2) على الأقل</strong>. سجّل دخول مجموعتك أو أنشئ حساب مجموعة جديدة الآن للمتابعة في تقديم الدراسة.
+          </p>
+          <div class="wizard-gate-actions">
+            <button type="button" class="btn btn-primary btn-lg" onclick="state.postAuthRedirectToSubmit = true; openAuthModal('register')">
+              👥 تسجيل مجموعة جديدة (متاح للجميع)
+            </button>
+            <button type="button" class="btn btn-secondary btn-lg" onclick="state.postAuthRedirectToSubmit = true; openAuthModal('login')">
+              🔑 تسجيل الدخول بحساب مجموعة
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  if (state.currentUser.role === 'lajna') {
+    if (mainCard) mainCard.style.display = 'none';
+    if (gateEl) {
+      gateEl.style.display = 'block';
+      gateEl.innerHTML = `
+        <div class="empty-state-card">
+          <div style="font-size:3rem; margin-bottom:12px;">⚖️</div>
+          <h2>حسابك مسجل كعضو في لجنة التحكيم (Lajna)</h2>
+          <p style="color:var(--text-muted); max-width:520px; margin:12px auto 0 auto;">
+            حسابات لجنة التحكيم مخصصة لمراجعة وتقييم الدراسات فقط. للمشاركة كمتسابق في المسابقة، يرجى تسجيل الخروج وإنشاء حساب <strong>مجموعة مشاركة</strong> (2+ أعضاء).
+          </p>
+          <div class="wizard-gate-actions">
+            <button type="button" class="btn btn-lajna" onclick="navigateTo('lajna')">⚖️ الذهاب للوحة التحكيم</button>
+            <button type="button" class="btn btn-secondary" onclick="logout().then(() => { state.postAuthRedirectToSubmit = true; openAuthModal('register'); })">
+              👥 التسجيل بحساب مجموعة للمشاركة
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  if (gateEl) gateEl.style.display = 'none';
+  if (mainCard) mainCard.style.display = 'block';
+
+  // Auto-fill registered Group info when entering Step 1
+  const teamNameInput = document.getElementById('wiz-team-name');
+  const teamMembersInput = document.getElementById('wiz-team-members');
+  if (teamNameInput && !teamNameInput.value.trim()) {
+    teamNameInput.value = state.currentUser.group_name || state.currentUser.organization || '';
+  }
+  if (teamMembersInput && !teamMembersInput.value.trim()) {
+    teamMembersInput.value = state.currentUser.group_members || '';
+  }
+  updateWizardGroupStatus();
+
   const isTheme = state.wizardCompetitionType === 'theme_idea';
-  const isAr = state.lang === 'ar';
 
   const steps = isTheme
     ? [
-        { step: 1, label: isAr ? 'فكرتك في المحور' : 'Your Idea' },
-        { step: 2, label: isAr ? 'الجمهور والأثر' : 'Audience & Impact' },
-        { step: 3, label: isAr ? 'تحليل SWOT' : 'SWOT Matrix' },
-        { step: 4, label: isAr ? 'دراسة الجدوى' : 'Feasibility' },
-        { step: 5, label: isAr ? 'المستند والإرسال' : 'Doc & Submit' }
-      ]
+      { step: 1, label: 'فكرتك في المحور' },
+      { step: 2, label: 'الجمهور والأثر' },
+      { step: 3, label: 'تحليل SWOT' },
+      { step: 4, label: 'دراسة الجدوى' },
+      { step: 5, label: 'المستند والإرسال' }
+    ]
     : [
-        { step: 1, label: isAr ? 'استراتيجية التسويق' : 'Strategy Info' },
-        { step: 2, label: isAr ? 'الجمهور المستهدف' : 'Target Audience' },
-        { step: 3, label: isAr ? 'تحليل SWOT' : 'SWOT Matrix' },
-        { step: 4, label: isAr ? 'الخطة والجدوى' : 'Marketing & Finance' },
-        { step: 5, label: isAr ? 'المستند والإرسال' : 'Doc & Submit' }
-      ];
+      { step: 1, label: 'استراتيجية التسويق' },
+      { step: 2, label: 'الجمهور المستهدف' },
+      { step: 3, label: 'تحليل SWOT' },
+      { step: 4, label: 'الخطة والجدوى' },
+      { step: 5, label: 'المستند والإرسال' }
+    ];
 
   const stepsEl = document.getElementById('wizard-steps-container');
   if (stepsEl) {
@@ -1034,7 +1298,7 @@ function renderSubmissionWizard() {
   if (captionEl) {
     const activeObj = steps.find(s => s.step === state.wizardStep) || steps[0];
     captionEl.innerHTML = `
-      <span class="wizard-mobile-step-pill">${isAr ? `الخطوة ${activeObj.step} من 5` : `Step ${activeObj.step} of 5`}</span>
+      <span class="wizard-mobile-step-pill">الخطوة ${activeObj.step} من 5</span>
       <span class="wizard-mobile-step-title">${activeObj.label}</span>
     `;
   }
@@ -1049,12 +1313,12 @@ function renderSubmissionWizard() {
   if (compSelectorEl) {
     compSelectorEl.innerHTML = `
       <button type="button" class="wiz-comp-btn ${!isTheme ? 'active' : ''}" onclick="selectWizardCompetition('marketing_strategy')">
-        <span class="wiz-comp-title">🎯 ${isAr ? 'المسابقة 1: استراتيجية تسويق' : 'Competition 1: Marketing Strategy'}</span>
-        <span class="wiz-comp-sub">${isAr ? 'اختر فكرة مطروحة وقدّم أفضل استراتيجية تسويق وجدوى' : 'Pick an offered idea & submit the best marketing strategy'}</span>
+        <span class="wiz-comp-title">🎯 المسابقة 1: استراتيجية تسويق</span>
+        <span class="wiz-comp-sub">اختر فكرة مطروحة وقدّم أفضل استراتيجية تسويق وجدوى</span>
       </button>
       <button type="button" class="wiz-comp-btn wiz-comp-btn-theme ${isTheme ? 'active' : ''}" onclick="selectWizardCompetition('theme_idea')">
-        <span class="wiz-comp-title">🌿 ${isAr ? 'المسابقة 2: فكرة ضمن محور' : 'Competition 2: Theme Idea'}</span>
-        <span class="wiz-comp-sub">${isAr ? 'قدّم أفضل فكرة مشروع مبتكرة ضمن المحور الذي تحدده الإدارة' : 'Pitch your best original idea in the Admin theme'}</span>
+        <span class="wiz-comp-title">🌿 المسابقة 2: فكرة ضمن محور</span>
+        <span class="wiz-comp-sub">قدّم أفضل فكرة مشروع مبتكرة ضمن المحور الذي تحدده الإدارة</span>
       </button>
     `;
   }
@@ -1075,19 +1339,17 @@ function renderSubmissionWizard() {
       closedNoticeEl.innerHTML = `
         <div class="empty-state-card" style="border-color:rgba(139,92,246,0.35); margin-top:12px;">
           <div style="font-size:2.6rem; margin-bottom:10px;">⏳</div>
-          <h3>${isAr ? 'محور المسابقة الثانية قيد الإعداد من الإدارة' : 'Competition 2 Theme Coming Soon'}</h3>
+          <h3>محور المسابقة الثانية قيد الإعداد من الإدارة</h3>
           <p style="color:var(--text-muted); max-width:500px; margin:10px auto 18px auto; font-size:0.92rem;">
-            ${isAr
-              ? 'ستقوم الإدارة بنشر المحور الرسمي قريباً (مثل: الطبيعة والاستدامة أو محور آخر). يمكنك حالياً المشاركة في المسابقة الأولى أو العودة فور فتح المحور.'
-              : 'Admin will announce the official theme soon (e.g. Nature & Sustainability). You can submit to Competition 1 now or check back once the theme opens.'}
+            ستقوم الإدارة بنشر المحور الرسمي قريباً (مثل: الطبيعة والاستدامة أو محور آخر). يمكنك حالياً المشاركة في المسابقة الأولى أو العودة فور فتح المحور.
           </p>
           <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
             <button type="button" class="btn btn-primary btn-sm" onclick="selectWizardCompetition('marketing_strategy')">
-              🎯 ${isAr ? 'الانتقال للمسابقة 1 (استراتيجية التسويق)' : 'Switch to Competition 1'}
+              🎯 الانتقال للمسابقة 1 (استراتيجية التسويق)
             </button>
             ${isAdminOrLajna ? `
               <button type="button" class="btn btn-lajna btn-sm" onclick="openAddIdeaModal('theme_idea')">
-                🌿 ${isAr ? 'إضافة وفتح محور الآن (Admin)' : 'Add & Open Theme Now'}
+                🌿 إضافة وفتح محور الآن (Admin)
               </button>
             ` : ''}
           </div>
@@ -1103,8 +1365,8 @@ function renderSubmissionWizard() {
     if (select) {
       const currentVal = state.wizardChallengeId || select.value;
       const defaultOpt = isTheme
-        ? (isAr ? '-- اختر المحور المتاح --' : '-- Select Open Theme --')
-        : (isAr ? '-- اختر الفكرة من التحديات المتاحة --' : '-- Select Offered Idea --');
+        ? '-- اختر المحور المتاح --'
+        : '-- اختر الفكرة من التحديات المتاحة --';
       select.innerHTML = `<option value="">${defaultOpt}</option>` +
         openTracks.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
       if (openTracks.some(c => c.id === currentVal)) {
@@ -1126,23 +1388,23 @@ function renderSubmissionWizard() {
   const inputPitch = document.getElementById('wiz-pitch');
 
   if (step1Heading) step1Heading.textContent = isTheme
-    ? (isAr ? '1. اختيار المحور وبيانات فكرتك المبتكرة' : '1. Select Theme & Pitch Your Idea')
-    : (isAr ? '1. اختيار الفكرة وملخص استراتيجية التسويق' : '1. Select Idea & Marketing Strategy');
+    ? '1. اختيار المحور وبيانات فكرتك المبتكرة'
+    : '1. اختيار الفكرة وملخص استراتيجية التسويق';
   if (lblTrack) lblTrack.textContent = isTheme
-    ? (isAr ? 'محور المسابقة الثانية (Theme) *' : 'Competition Theme *')
-    : (isAr ? 'فكرة التحدي المطروحة (المسابقة 1) *' : 'Offered Challenge Idea (Comp 1) *');
+    ? 'محور المسابقة الثانية (Theme) *'
+    : 'فكرة التحدي المطروحة (المسابقة 1) *';
   if (lblTitle) lblTitle.textContent = isTheme
-    ? (isAr ? 'عنوان فكرتك المبتكرة *' : 'Your Original Idea Title *')
-    : (isAr ? 'عنوان خطة التسويق / المشروع *' : 'Marketing Plan / Project Title *');
+    ? 'عنوان فكرتك المبتكرة *'
+    : 'عنوان خطة التسويق / المشروع *';
   if (lblPitch) lblPitch.textContent = isTheme
-    ? (isAr ? 'شرح فكرتك والمشكلة التي تحلها ضمن المحور *' : 'Describe Your Idea & How It Fits the Theme *')
-    : (isAr ? 'الملخص التنفيذي لاستراتيجية التسويق والجدوى *' : 'Executive Summary of Marketing Strategy *');
+    ? 'شرح فكرتك والمشكلة التي تحلها ضمن المحور *'
+    : 'الملخص التنفيذي لاستراتيجية التسويق والجدوى *';
   if (inputTitle) inputTitle.placeholder = isTheme
-    ? (isAr ? 'مثال: EcoGuard — منصة ذكية لحماية الغابات...' : 'e.g. EcoGuard Smart Forest Monitoring')
-    : (isAr ? 'مثال: خطة إطلاق وتوسيع Omni AI للشركات' : 'e.g. Go-to-Market Growth Plan for Omni AI');
+    ? 'مثال: EcoGuard — منصة ذكية لحماية الغابات...'
+    : 'مثال: خطة إطلاق وتوسيع Omni AI للشركات';
   if (inputPitch) inputPitch.placeholder = isTheme
-    ? (isAr ? 'اشرح فكرتك الإبداعية وكيف تخدم المحور المحدد والقيمة المضافة...' : 'Explain your original idea, the problem it solves in this theme, and its value...')
-    : (isAr ? 'اشرح استراتيجيتك التسويقية للوصول للعملاء، التموضع، وخطة النمو...' : 'Explain your marketing strategy, positioning, acquisition channels, and growth plan...');
+    ? 'اشرح فكرتك الإبداعية وكيف تخدم المحور المحدد والقيمة المضافة...'
+    : 'اشرح استراتيجيتك التسويقية للوصول للعملاء، التموضع، وخطة النمو...';
 
   if (state.wizardStep === 3) renderSwotMatrix();
   if (state.wizardStep === 4) updateFinancialCalc();
@@ -1157,8 +1419,8 @@ function renderSwotMatrix() {
     const listEl = document.getElementById(`swot-list-${type}`);
     if (!listEl) return;
     const items = state.form.swot[type] || [];
-    listEl.innerHTML = items.length === 0 
-      ? `<li style="font-size:0.8rem; color:var(--text-dim); padding:6px;">${state.lang === 'ar' ? 'لم تتم إضافة عناصر بعد' : 'No points added yet'}</li>`
+    listEl.innerHTML = items.length === 0
+      ? '<li style="font-size:0.8rem; color:var(--text-dim); padding:6px;">لم تتم إضافة عناصر بعد</li>'
       : items.map((item, idx) => `
         <li class="swot-item">
           <span>${item}</span>
@@ -1186,7 +1448,7 @@ function renderWizardReview() {
       <h3 style="font-size:1.25rem; margin-bottom:8px;">${title || 'Untitled Project'}</h3>
       <p style="color:var(--text-muted); margin-bottom:14px; font-size:0.92rem;">${pitch || 'No pitch provided'}</p>
       <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:14px;">
-        👥 ${state.lang === 'ar' ? 'الفريق:' : 'Team:'} <strong>${team || (state.currentUser ? state.currentUser.name : 'Anonymous')}</strong>
+        👥 الفريق: <strong>${team || (state.currentUser ? state.currentUser.name : 'Anonymous')}</strong>
       </div>
 
       <div class="wizard-review-grid">
@@ -1215,7 +1477,7 @@ function renderMySubmissionView() {
   if (!state.currentUser) {
     container.innerHTML = `
       <div class="empty-state-card">
-        <h3>${state.lang === 'ar' ? 'يرجى تسجيل الدخول لعرض دراستك' : 'Please sign in to view your submission'}</h3>
+        <h3>يرجى تسجيل الدخول لعرض دراستك</h3>
         <button class="btn btn-primary" onclick="openAuthModal('login')" style="margin-top:16px;">تسجيل الدخول</button>
       </div>
     `;
@@ -1226,11 +1488,11 @@ function renderMySubmissionView() {
     container.innerHTML = `
       <div class="empty-state-card">
         <div style="font-size:3rem; margin-bottom:12px;">📁</div>
-        <h3>${state.lang === 'ar' ? 'لم تقم بتقديم أي دراسة جدوى بعد' : 'No submitted studies yet'}</h3>
+        <h3>لم تقم بتقديم أي دراسة جدوى بعد</h3>
         <p style="color:var(--text-muted); margin:12px auto 20px auto; max-width:480px;">
-          ${state.lang === 'ar' ? 'اختر إحدى أفكار المسابقة وأعد دراسة الجدوى وأرفق مستندك لإرساله إلى لجنة التحكيم.' : 'Pick a challenge idea, complete your feasibility study, and attach your document.'}
+          اختر إحدى أفكار المسابقة وأعد دراسة الجدوى وأرفق مستندك لإرساله إلى لجنة التحكيم.
         </p>
-        <button class="btn btn-primary" onclick="navigateTo('submit')">🚀 ${state.lang === 'ar' ? 'إعداد دراسة الجدوى الآن' : 'Start Submission'}</button>
+        <button class="btn btn-primary" onclick="navigateTo('submit')">🚀 إعداد دراسة الجدوى الآن</button>
       </div>
     `;
     return;
@@ -1250,7 +1512,7 @@ function renderMySubmissionView() {
           <div style="color:#38bdf8; font-size:0.88rem; font-weight:600;">${s.competition_type === 'theme_idea' ? '🌿 المحور:' : '🎯 الفكرة:'} ${s.challenge_title}</div>
         </div>
         <div class="sub-score-badge" style="background:#0284c7;">
-          ⏳ ${state.lang === 'ar' ? 'الحالة: قيد التحكيم لدى اللجنة' : 'Status: Under Lajna Review'}
+          ⏳ الحالة: قيد التحكيم لدى اللجنة
         </div>
       </div>
 
@@ -1296,14 +1558,12 @@ function renderLajnaView() {
     container.innerHTML = `
       <div class="empty-state-card">
         <div style="font-size:3rem; margin-bottom:16px;">⚖️</div>
-        <h2>${state.lang === 'ar' ? 'بوابة لجنة التحكيم السرية (Lajna Jury Portal)' : 'Confidential Lajna Jury Suite'}</h2>
+        <h2>بوابة لجنة التحكيم السرية (Lajna Jury Portal)</h2>
         <p style="color:var(--text-muted); max-width:540px; margin:12px auto 24px auto;">
-          ${state.lang === 'ar' 
-            ? 'المشاريع ودراسات الجدوى غير منشورة علناً، بل تُحفظ مباشرة في قاعدة البيانات ليطلع عليها أعضاء لجنة التحكيم المعتمدون حصرياً.' 
-            : 'Submissions are strictly confidential and stored directly in the database for approved Lajna jurors only.'}
+          المشاريع ودراسات الجدوى غير منشورة علناً، بل تُحفظ مباشرة في قاعدة البيانات ليطلع عليها أعضاء لجنة التحكيم المعتمدون حصرياً.
         </p>
         <button class="btn btn-lajna btn-lg" onclick="openAuthModal('login')">
-          🔑 ${state.lang === 'ar' ? 'تسجيل الدخول كـ عضو لجنة تحكيم' : 'Sign In as Lajna Juror'}
+          🔑 تسجيل الدخول كـ عضو لجنة تحكيم
         </button>
       </div>
     `;
@@ -1326,7 +1586,7 @@ function renderLajnaView() {
         </p>
         <div style="display:flex; justify-content:center; gap:12px;">
           <button class="btn btn-secondary" onclick="checkAuth(); renderApp();">
-            🔄 ${state.lang === 'ar' ? 'إعادة التحقق من حالة الاعتماد' : 'Recheck Approval Status'}
+            🔄 إعادة التحقق من حالة الاعتماد
           </button>
         </div>
       </div>
@@ -1347,52 +1607,48 @@ function renderLajnaView() {
     <div class="lajna-banner">
       <div>
         <h3 style="color:#ffffff; margin-bottom:6px;">
-          ⚖️ ${state.lang === 'ar' ? 'لوحة تحكيم دراسات الجدوى والمستندات (Lajna Jury Panel)' : 'Live Lajna Evaluation Suite'}
+          ⚖️ لوحة تحكيم دراسات الجدوى والمستندات (Lajna Jury Panel)
         </h3>
         <p style="color:#e9d5ff; font-size:0.9rem;">
-          ${state.lang === 'ar' 
-            ? `المحكّم: ${state.currentUser.name} • المشاريع مستلمة مباشرة من قاعدة البيانات، اضغط على أي مشروع لقراءة دراسته وتحميل مستنده وتقييمه.`
-            : `Juror: ${state.currentUser.name} • Submissions loaded from database. Click any study to inspect, download doc, and score.`}
+          المحكّم: ${state.currentUser.name} • المشاريع مستلمة مباشرة من قاعدة البيانات، اضغط على أي مشروع لقراءة دراسته وتحميل مستنده وتقييمه.
         </p>
       </div>
       <div style="display:flex; gap:12px;">
         <button class="btn ${state.winnersAnnounced ? 'btn-secondary' : 'btn-primary'}" onclick="toggleWinnersAnnouncement()">
-          🏆 ${state.winnersAnnounced 
-            ? (state.lang === 'ar' ? 'إخفاء النتائج عن المشاركين' : 'Unpublish Winners') 
-            : (state.lang === 'ar' ? 'إعلان الفائزين رسمياً!' : 'Announce Official Winners!')}
+          🏆 ${state.winnersAnnounced ? 'إخفاء النتائج عن المشاركين' : 'إعلان الفائزين رسمياً!'}
         </button>
       </div>
     </div>
 
     <div class="competition-filter-bar" style="margin-bottom:20px;">
       <button type="button" class="filter-chip ${state.lajnaCompetitionFilter === 'all' ? 'active' : ''}" onclick="setLajnaFilter('all')">
-        ${state.lang === 'ar' ? 'الكل' : 'All'} (${state.submissions.length})
+        الكل (${state.submissions.length})
       </button>
       <button type="button" class="filter-chip ${state.lajnaCompetitionFilter === 'marketing_strategy' ? 'active' : ''}" onclick="setLajnaFilter('marketing_strategy')">
-        🎯 ${state.lang === 'ar' ? 'المسابقة 1: استراتيجية التسويق' : 'Comp 1: Marketing'} (${comp1Count})
+        🎯 المسابقة 1: استراتيجية التسويق (${comp1Count})
       </button>
       <button type="button" class="filter-chip ${state.lajnaCompetitionFilter === 'theme_idea' ? 'active' : ''}" onclick="setLajnaFilter('theme_idea')">
-        🌿 ${state.lang === 'ar' ? 'المسابقة 2: أفكار المحاور' : 'Comp 2: Theme Ideas'} (${comp2Count})
+        🌿 المسابقة 2: أفكار المحاور (${comp2Count})
       </button>
     </div>
 
     <div class="section-header">
       <div>
-        <h3 style="font-size:1.3rem;">📋 ${state.lang === 'ar' ? 'دراسات الجدوى المحفوظة في قاعدة البيانات' : 'Studies Stored in Database'}</h3>
-        <p class="section-subtitle">${filteredSubs.length} ${state.lang === 'ar' ? 'مشاركة مسجلة قيد التحكيم' : 'entries in this view'}</p>
+        <h3 style="font-size:1.3rem;">📋 دراسات الجدوى المحفوظة في قاعدة البيانات</h3>
+        <p class="section-subtitle">${filteredSubs.length} مشاركة مسجلة قيد التحكيم</p>
       </div>
     </div>
 
     ${filteredSubs.length === 0 ? `
       <div class="empty-state-card">
         <div style="font-size:2.4rem; margin-bottom:8px;">📭</div>
-        <p style="color:var(--text-muted);">${state.lang === 'ar' ? 'لا توجد مشاركات في هذه المسابقة بعد.' : 'No submissions in this competition track yet.'}</p>
+        <p style="color:var(--text-muted);">لا توجد مشاركات في هذه المسابقة بعد.</p>
       </div>
     ` : `
       <div class="submissions-grid">
         ${filteredSubs.map(s => {
-          const meta = getCompetitionMeta(s.competition_type);
-          return `
+    const meta = getCompetitionMeta(s.competition_type);
+    return `
           <div class="submission-card">
             <div>
               <div class="sub-header">
@@ -1420,15 +1676,15 @@ function renderLajnaView() {
 
             <div class="sub-footer">
               <button class="btn btn-secondary btn-sm" onclick="openDetailModal('${s.id}')">
-                📄 ${state.lang === 'ar' ? 'فحص الجدوى والمستند' : 'Inspect Study & Doc'}
+                📄 فحص الجدوى والمستند
               </button>
               <button class="btn btn-lajna btn-sm" onclick="openEvaluationModal('${s.id}')">
-                ✍️ ${state.lang === 'ar' ? 'منح الدرجات والتقييم' : 'Evaluate & Score'}
+                ✍️ منح الدرجات والتقييم
               </button>
             </div>
           </div>
         `;
-        }).join('')}
+  }).join('')}
       </div>
     `}
   `;
@@ -1462,7 +1718,7 @@ function renderAdminLajnaView() {
       </div>
     </div>
 
-    <div class="table-scroll-hint">↔️ ${state.lang === 'ar' ? 'اسحب الجدول أفقياً لعرض جميع الأعمدة' : 'Scroll horizontally to view all columns'}</div>
+    <div class="table-scroll-hint">↔️ اسحب الجدول أفقياً لعرض جميع الأعمدة</div>
     <div class="leaderboard-table-container">
       <table class="leaderboard-table">
         <thead>
@@ -1545,15 +1801,13 @@ function renderLeaderboardView() {
   container.innerHTML = `
     <div class="leaderboard-header">
       <div class="hero-pill" style="border-color:rgba(245, 158, 11, 0.4); color:#fbbf24; background:rgba(245, 158, 11, 0.1);">
-        🏆 ${state.winnersAnnounced ? (state.lang === 'ar' ? 'تم اعتماد وإعلان الفائزين رسمياً!' : 'Official Winners Announced!') : (state.lang === 'ar' ? 'النتائج قيد التحكيم والفرز لدى اللجنة' : 'Deliberation in Progress')}
+        🏆 ${state.winnersAnnounced ? 'تم اعتماد وإعلان الفائزين رسمياً!' : 'النتائج قيد التحكيم والفرز لدى اللجنة'}
       </div>
       <h2 class="leaderboard-title">
-        ${state.lang === 'ar' ? 'منصة تتويج الفائزين وجدول الترتيب النهائي' : 'Winners Podium & Final Standings'}
+        منصة تتويج الفائزين وجدول الترتيب النهائي
       </h2>
       <p class="leaderboard-subtitle">
-        ${state.lang === 'ar' 
-          ? 'تحديد الفائزين في كل مسابقة بناءً على مجموع درجات لجنة التحكيم لمصفوفة SWOT ودراسة الجدوى والمستند المرفق.'
-          : 'Determined per competition by Lajna committee scores across strategy/idea, SWOT, feasibility, and documentation.'}
+        تحديد الفائزين في كل مسابقة بناءً على مجموع درجات لجنة التحكيم لمصفوفة SWOT ودراسة الجدوى والمستند المرفق.
       </p>
 
       ${(state.isLajnaOrAdmin) ? `
@@ -1568,30 +1822,30 @@ function renderLeaderboardView() {
     ${!state.winnersAnnounced && !state.isLajnaOrAdmin ? `
       <div class="empty-state-card">
         <div style="font-size:3rem; margin-bottom:12px;">⏳</div>
-        <h3>${state.lang === 'ar' ? 'جلسة التحكيم جارية الآن' : 'Jury Deliberation in Progress'}</h3>
+        <h3>جلسة التحكيم جارية الآن</h3>
         <p style="color:var(--text-muted); max-width:500px; margin:10px auto;">
-          ${state.lang === 'ar' ? 'تقوم لجنة التحكيم (Lajna) حالياً بتقييم دراسات الجدوى والمستندات المرفقة في قاعدة البيانات. سيتم إعلان الفائزين هنا بمجرد اعتماد النتائج.' : 'The Lajna committee is evaluating proposals and documents in the database. Winners will be announced here soon!'}
+          تقوم لجنة التحكيم (Lajna) حالياً بتقييم دراسات الجدوى والمستندات المرفقة في قاعدة البيانات. سيتم إعلان الفائزين هنا بمجرد اعتماد النتائج.
         </p>
       </div>
     ` : `
       <!-- Competition Switcher Tabs -->
       <div class="competition-filter-bar" style="justify-content:center; margin-bottom:24px;">
         <button type="button" class="filter-chip ${activeTab === 'marketing_strategy' ? 'active' : ''}" onclick="setLeaderboardCompetition('marketing_strategy')">
-          🎯 ${state.lang === 'ar' ? 'فائزو المسابقة 1: استراتيجية التسويق' : 'Competition 1: Marketing Strategy'}
+          🎯 فائزو المسابقة 1: استراتيجية التسويق
         </button>
         <button type="button" class="filter-chip ${activeTab === 'theme_idea' ? 'active' : ''}" onclick="setLeaderboardCompetition('theme_idea')">
-          🌿 ${state.lang === 'ar' ? 'فائزو المسابقة 2: أفضل فكرة في المحور' : 'Competition 2: Best Theme Idea'}
+          🌿 فائزو المسابقة 2: أفضل فكرة في المحور
         </button>
       </div>
 
       ${filteredLeaderboard.length === 0 ? `
         <div class="empty-state-card">
           <div style="font-size:2.6rem; margin-bottom:10px;">🏆</div>
-          <h3>${state.lang === 'ar' ? 'لا توجد نتائج مسجلة في هذه المسابقة بعد' : 'No ranked entries in this competition yet'}</h3>
+          <h3>لا توجد نتائج مسجلة في هذه المسابقة بعد</h3>
           <p style="color:var(--text-muted); margin-top:8px;">
             ${activeTab === 'theme_idea'
-              ? (state.lang === 'ar' ? 'ستظهر نتائج المسابقة الثانية هنا بعد فتح المحور وتقييم المشاركات.' : 'Competition 2 results will appear once the theme opens and entries are scored.')
-              : (state.lang === 'ar' ? 'لم تُقيّم أي مشاركة في المسابقة الأولى بعد.' : 'No Competition 1 entries scored yet.')}
+        ? 'ستظهر نتائج المسابقة الثانية هنا بعد فتح المحور وتقييم المشاركات.'
+        : 'لم تُقيّم أي مشاركة في المسابقة الأولى بعد.'}
           </p>
         </div>
       ` : `
@@ -1602,7 +1856,7 @@ function renderLeaderboardView() {
           ${top3[1] ? `
             <div class="podium-card podium-2nd" onclick="openDetailModal('${top3[1].id}')" style="cursor:pointer;">
               <div class="podium-trophy">🥈</div>
-              <span class="podium-rank-tag">${state.lang === 'ar' ? 'المركز الثاني' : '2nd Place'}</span>
+              <span class="podium-rank-tag">المركز الثاني</span>
               <h4 style="font-size:1.05rem; margin:8px 0 4px 0;">${top3[1].title}</h4>
               <div style="font-size:0.8rem; color:var(--text-muted);">${top3[1].team_name}</div>
               <div class="podium-score">${top3[1].avg_score || 0}<span style="font-size:1rem; color:var(--text-dim);">/100</span></div>
@@ -1613,7 +1867,7 @@ function renderLeaderboardView() {
           ${top3[0] ? `
             <div class="podium-card podium-1st" onclick="openDetailModal('${top3[0].id}')" style="cursor:pointer;">
               <div class="podium-trophy">🏆</div>
-              <span class="podium-rank-tag">${state.lang === 'ar' ? '🥇 الفائز بالمركز الأول' : '🥇 Champion - 1st'}</span>
+              <span class="podium-rank-tag">🥇 الفائز بالمركز الأول</span>
               <h3 style="font-size:1.25rem; margin:8px 0 4px 0; color:#fbbf24;">${top3[0].title}</h3>
               <div style="font-size:0.85rem; color:var(--text-muted);">${top3[0].team_name}</div>
               <div class="podium-score" style="color:#fbbf24;">${top3[0].avg_score || 0}<span style="font-size:1.1rem; color:var(--text-dim);">/100</span></div>
@@ -1625,7 +1879,7 @@ function renderLeaderboardView() {
           ${top3[2] ? `
             <div class="podium-card podium-3rd" onclick="openDetailModal('${top3[2].id}')" style="cursor:pointer;">
               <div class="podium-trophy">🥉</div>
-              <span class="podium-rank-tag">${state.lang === 'ar' ? 'المركز الثالث' : '3rd Place'}</span>
+              <span class="podium-rank-tag">المركز الثالث</span>
               <h4 style="font-size:1.05rem; margin:8px 0 4px 0;">${top3[2].title}</h4>
               <div style="font-size:0.8rem; color:var(--text-muted);">${top3[2].team_name}</div>
               <div class="podium-score">${top3[2].avg_score || 0}<span style="font-size:1rem; color:var(--text-dim);">/100</span></div>
@@ -1635,20 +1889,20 @@ function renderLeaderboardView() {
       ` : ''}
 
       <!-- Leaderboard Table -->
-      <div class="table-scroll-hint" style="margin-top:28px;">↔️ ${state.lang === 'ar' ? 'اسحب الجدول أفقياً لعرض جميع الأعمدة' : 'Scroll horizontally to view all columns'}</div>
+      <div class="table-scroll-hint" style="margin-top:28px;">↔️ اسحب الجدول أفقياً لعرض جميع الأعمدة</div>
       <div class="leaderboard-table-container">
         <table class="leaderboard-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>${state.lang === 'ar' ? 'المشروع والفريق' : 'Project & Team'}</th>
-              <th>${activeTab === 'theme_idea' ? (state.lang === 'ar' ? 'المحور' : 'Theme') : (state.lang === 'ar' ? 'فكرة التحدي' : 'Track')}</th>
-              <th>${state.lang === 'ar' ? 'المستند المرفق' : 'Doc'}</th>
-              <th>${state.lang === 'ar' ? 'الجمهور (/20)' : 'Audience (/20)'}</th>
-              <th>${state.lang === 'ar' ? 'SWOT (/20)' : 'SWOT (/20)'}</th>
-              <th>${state.lang === 'ar' ? 'الجدوى الفنية (/25)' : 'Tech (/25)'}</th>
-              <th>${state.lang === 'ar' ? 'الجدوى المالية (/25)' : 'Finance (/25)'}</th>
-              <th>${state.lang === 'ar' ? 'المجموع النهائي' : 'Total (/100)'}</th>
+              <th>المشروع والفريق</th>
+              <th>${activeTab === 'theme_idea' ? 'المحور' : 'فكرة التحدي'}</th>
+              <th>المستند المرفق</th>
+              <th>الجمهور (/20)</th>
+              <th>SWOT (/20)</th>
+              <th>الجدوى الفنية (/25)</th>
+              <th>الجدوى المالية (/25)</th>
+              <th>المجموع النهائي</th>
             </tr>
           </thead>
           <tbody>
@@ -1682,73 +1936,6 @@ function renderLeaderboardView() {
   `;
 }
 
-// 6. Database & PostgreSQL Status View
-async function renderDbStatusView() {
-  const container = document.getElementById('db-view-content');
-  if (!container) return;
-
-  container.innerHTML = `<div style="text-align:center; padding:40px;">Checking Database & PostgreSQL status...</div>`;
-
-  try {
-    const data = await api('/api/db/status');
-    const pgOnline = data.postgres ? !!data.postgres.online : !!data.is_postgres;
-    const pgMsg = data.postgres?.status_message || (data.postgres_url_set ? 'Connected via DATABASE_URL' : 'SQLite fallback active (PostgreSQL URL ready in .env)');
-
-    container.innerHTML = `
-      <div class="db-card">
-        <div class="db-header">
-          <div style="font-size:2.6rem; flex-shrink:0;">🐘</div>
-          <div>
-            <h2 class="db-title">PostgreSQL Architecture & Confidential Storage</h2>
-            <p style="color:var(--text-muted); font-size:0.9rem;">
-              Submissions, attached documents, and SWOT/feasibility studies are stored directly in the database for the Lajna jury committee.
-            </p>
-          </div>
-        </div>
-
-        <div class="db-engine-grid">
-          <div class="db-info-box">
-            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">Active Storage Engine</div>
-            <div style="font-size:1.1rem; font-weight:700; color:#34d399;">⚡ ${data.active_engine}</div>
-            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;">Direct to DB storage with document links and encrypted records.</div>
-          </div>
-
-          <div class="db-info-box">
-            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">PostgreSQL Port 5432 Status</div>
-            <div style="font-size:1.1rem; font-weight:700; color:${pgOnline ? '#34d399' : '#f59e0b'};">
-              ${pgOnline ? '🟢 Online & Connected' : '🟡 Ready (Connects when PostgreSQL starts)'}
-            </div>
-            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;">${pgMsg}</div>
-          </div>
-        </div>
-
-        <h4 style="margin-bottom:12px;">📊 Records Stored in Database</h4>
-        <div class="db-stats-grid">
-          <div class="stat-item"><div class="stat-value">${data.counts.users}</div><div class="stat-label">Users</div></div>
-          <div class="stat-item"><div class="stat-value">${data.counts.challenges}</div><div class="stat-label">Challenges</div></div>
-          <div class="stat-item"><div class="stat-value">${data.counts.submissions}</div><div class="stat-label">Submissions</div></div>
-          <div class="stat-item"><div class="stat-value">${data.counts.evaluations}</div><div class="stat-label">Evaluations</div></div>
-        </div>
-
-        <h4 style="margin-bottom:12px;">🛠️ PostgreSQL DDL & Live Data Export</h4>
-        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">
-          Download the latest PostgreSQL schema and full database SQL file with one click:
-        </p>
-        <div class="db-actions-row">
-          <a href="/api/db/export-postgres" download="agrivers_postgres.sql" class="btn btn-primary">
-            📥 Download PostgreSQL Dump (agrivers_postgres.sql)
-          </a>
-          <button class="btn btn-secondary" onclick="renderDbStatusView()">
-            🔄 Recheck Status
-          </button>
-        </div>
-      </div>
-    `;
-  } catch (err) {
-    container.innerHTML = `<div style="color:var(--danger); text-align:center;">Failed to load DB status</div>`;
-  }
-}
-
 // Detail Modal Content
 function renderDetailModalContent(sub) {
   const container = document.getElementById('detail-modal-body');
@@ -1774,8 +1961,8 @@ function renderDetailModalContent(sub) {
       <h2 class="detail-title">${sub.title}</h2>
       <p style="font-size:1rem; color:var(--text-muted);">${sub.pitch}</p>
       <div class="detail-meta-row">
-        <span>👥 ${state.lang === 'ar' ? 'الفريق:' : 'Team:'} <strong>${sub.team_name}</strong></span>
-        <span>👤 ${state.lang === 'ar' ? 'الأعضاء:' : 'Members:'} ${sub.team_members}</span>
+        <span>👥 الفريق: <strong>${sub.team_name}</strong></span>
+        <span>👤 الأعضاء: ${sub.team_members}</span>
       </div>
     </div>
 
@@ -1798,20 +1985,20 @@ function renderDetailModalContent(sub) {
     <!-- Target Audience -->
     <div class="rubric-card detail-audience-card">
       <h3 style="color:#38bdf8; margin-bottom:12px; font-size:1.15rem;">
-        🎯 ${state.lang === 'ar' ? 'دراسة الجمهور المستهدف (Target Audience & Market Fit)' : 'Target Audience & Market Fit'}
+        🎯 دراسة الجمهور المستهدف (Target Audience & Market Fit)
       </h3>
       <div style="font-size:0.92rem; line-height:1.7;">
-        <p><strong>${state.lang === 'ar' ? 'الشريحة المستهدفة الأساسية:' : 'Primary Segment:'}</strong> ${target.primary_segment || 'N/A'}</p>
-        <p style="margin-top:6px;"><strong>${state.lang === 'ar' ? 'نقاط الألم والمشكلات:' : 'Customer Pain Points:'}</strong> ${target.customer_pain_points || 'N/A'}</p>
-        <p style="margin-top:6px;"><strong>${state.lang === 'ar' ? 'القيمة المقترحة:' : 'Value Proposition:'}</strong> ${target.value_proposition || 'N/A'}</p>
-        <p style="margin-top:6px;"><strong>${state.lang === 'ar' ? 'حجم السوق (TAM/SAM/SOM):' : 'Market Size:'}</strong> ${target.tam_sam_som || 'N/A'}</p>
-        <p style="margin-top:6px;"><strong>${state.lang === 'ar' ? 'شخصية العميل المشتري (Persona):' : 'Buyer Persona:'}</strong> ${target.buyer_persona || 'N/A'}</p>
+        <p><strong>الشريحة المستهدفة الأساسية:</strong> ${target.primary_segment || 'N/A'}</p>
+        <p style="margin-top:6px;"><strong>نقاط الألم والمشكلات:</strong> ${target.customer_pain_points || 'N/A'}</p>
+        <p style="margin-top:6px;"><strong>القيمة المقترحة:</strong> ${target.value_proposition || 'N/A'}</p>
+        <p style="margin-top:6px;"><strong>حجم السوق (TAM/SAM/SOM):</strong> ${target.tam_sam_som || 'N/A'}</p>
+        <p style="margin-top:6px;"><strong>شخصية العميل المشتري (Persona):</strong> ${target.buyer_persona || 'N/A'}</p>
       </div>
     </div>
 
     <!-- SWOT Matrix -->
     <h3 style="margin-bottom:12px; font-size:1.15rem;">
-      🧭 ${state.lang === 'ar' ? 'مصفوفة تحليل سوات الرباعي (SWOT Analysis)' : 'SWOT Analysis Matrix'}
+      🧭 مصفوفة تحليل سوات الرباعي (SWOT Analysis)
     </h3>
     <div class="swot-grid">
       <div class="swot-quadrant swot-s">
@@ -1842,25 +2029,25 @@ function renderDetailModalContent(sub) {
 
     <!-- Feasibility Study -->
     <h3 style="margin:24px 0 12px 0; font-size:1.15rem;">
-      📈 ${state.lang === 'ar' ? 'دراسة الجدوى الشاملة (Dirasat Jadwa)' : 'Comprehensive Feasibility Study'}
+      📈 دراسة الجدوى الشاملة (Dirasat Jadwa)
     </h3>
     <div class="feasibility-grid">
       <div class="feasibility-box">
-        <h4>🛠️ ${state.lang === 'ar' ? 'الجدوى الفنية والتكنولوجية' : 'Technical Feasibility'}</h4>
-        <p style="font-size:0.88rem;"><strong>${state.lang === 'ar' ? 'مستوى الجاهزية:' : 'Readiness:'}</strong> ${feas.technical?.readiness_level || 'TRL 5'}</p>
+        <h4>🛠️ الجدوى الفنية والتكنولوجية</h4>
+        <p style="font-size:0.88rem;"><strong>مستوى الجاهزية:</strong> ${feas.technical?.readiness_level || 'TRL 5'}</p>
         <p style="font-size:0.88rem; margin-top:6px;">${feas.technical?.summary || 'N/A'}</p>
-        <p style="font-size:0.82rem; color:var(--text-dim); margin-top:6px;"><strong>${state.lang === 'ar' ? 'البنية التحتية:' : 'Infrastructure:'}</strong> ${feas.technical?.infrastructure_needs || 'N/A'}</p>
+        <p style="font-size:0.82rem; color:var(--text-dim); margin-top:6px;"><strong>البنية التحتية:</strong> ${feas.technical?.infrastructure_needs || 'N/A'}</p>
       </div>
 
       <div class="feasibility-box">
-        <h4>🛍️ ${state.lang === 'ar' ? 'الجدوى التسويقية والتجارية' : 'Market Feasibility'}</h4>
+        <h4>🛍️ الجدوى التسويقية والتجارية</h4>
         <p style="font-size:0.88rem;">${feas.market?.market_demand || 'N/A'}</p>
-        <p style="font-size:0.88rem; margin-top:6px;"><strong>${state.lang === 'ar' ? 'الميزة التنافسية:' : 'Edge:'}</strong> ${feas.market?.competitive_advantage || 'N/A'}</p>
-        <p style="font-size:0.82rem; color:var(--text-dim); margin-top:6px;"><strong>${state.lang === 'ar' ? 'قنوات التوزيع:' : 'Channels:'}</strong> ${feas.market?.marketing_channels || 'N/A'}</p>
+        <p style="font-size:0.88rem; margin-top:6px;"><strong>الميزة التنافسية:</strong> ${feas.market?.competitive_advantage || 'N/A'}</p>
+        <p style="font-size:0.82rem; color:var(--text-dim); margin-top:6px;"><strong>قنوات التوزيع:</strong> ${feas.market?.marketing_channels || 'N/A'}</p>
       </div>
 
       <div class="feasibility-box feasibility-box-full">
-        <h4>💰 ${state.lang === 'ar' ? 'الجدوى المالية والمؤشرات الاستثمارية' : 'Financial Feasibility & Metrics'}</h4>
+        <h4>💰 الجدوى المالية والمؤشرات الاستثمارية</h4>
         <div class="calc-result-box" style="margin-top:8px;">
           <div class="calc-item"><div class="val">$${(fin.capex || 0).toLocaleString()}</div><div class="lbl">رأس المال التأسيسي (CAPEX)</div></div>
           <div class="calc-item"><div class="val">$${(fin.monthly_opex || 0).toLocaleString()}</div><div class="lbl">التشغيل الشهري (OPEX)</div></div>
@@ -1873,7 +2060,7 @@ function renderDetailModalContent(sub) {
         </div>
         ${fin.payment_system ? `
           <div style="margin-top:12px; padding:10px 14px; background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3); border-radius:8px; font-size:0.88rem;">
-            <strong>💳 ${state.lang === 'ar' ? 'نظام المدفوعات والفوترة:' : 'Payment & Billing System:'}</strong> ${fin.payment_system}
+            <strong>💳 نظام المدفوعات والفوترة:</strong> ${fin.payment_system}
           </div>
         ` : ''}
       </div>
@@ -1882,7 +2069,7 @@ function renderDetailModalContent(sub) {
     <!-- Jury Evaluations -->
     ${evals.length > 0 ? `
       <h3 style="margin:24px 0 12px 0; font-size:1.15rem;">
-        ⚖️ ${state.lang === 'ar' ? 'تقييمات وملاحظات لجنة التحكيم (Lajna Reviews)' : 'Lajna Jury Evaluations'}
+        ⚖️ تقييمات وملاحظات لجنة التحكيم (Lajna Reviews)
       </h3>
       <div style="display:flex; flex-direction:column; gap:12px;">
         ${evals.map(ev => `
@@ -1911,19 +2098,19 @@ function renderEvaluationModalContent(sub) {
 
   const labels = isTheme
     ? {
-        aud: '1. ملاءمة الفكرة للمحور والجمهور المستهدف (Theme Fit & Audience)',
-        swot: '2. عمق وواقعية تحليل سوات (SWOT Analysis Rigor)',
-        tech: '3. قابلية التنفيذ والجدوى الفنية والمستند (Execution & Doc)',
-        fin: '4. الجدوى المالية والاستدامة (Financial Viability & ROI)',
-        inn: '5. الإبداع والأصالة في المحور (Creativity & Innovation)'
-      }
+      aud: '1. ملاءمة الفكرة للمحور والجمهور المستهدف (Theme Fit & Audience)',
+      swot: '2. عمق وواقعية تحليل سوات (SWOT Analysis Rigor)',
+      tech: '3. قابلية التنفيذ والجدوى الفنية والمستند (Execution & Doc)',
+      fin: '4. الجدوى المالية والاستدامة (Financial Viability & ROI)',
+      inn: '5. الإبداع والأصالة في المحور (Creativity & Innovation)'
+    }
     : {
-        aud: '1. وضوح الجمهور المستهدف واستراتيجية التسويق (Marketing & Audience)',
-        swot: '2. عمق وواقعية تحليل سوات (SWOT Analysis Rigor)',
-        tech: '3. الجدوى الفنية والتسويقية والمستند (Strategy Execution & Doc)',
-        fin: '4. الجدوى المالية ونظام المدفوعات والعائد (Financial Viability & ROI)',
-        inn: '5. تميز الخطة وجودة العرض والمستند (Strategy Differentiation & Pitch)'
-      };
+      aud: '1. وضوح الجمهور المستهدف واستراتيجية التسويق (Marketing & Audience)',
+      swot: '2. عمق وواقعية تحليل سوات (SWOT Analysis Rigor)',
+      tech: '3. الجدوى الفنية والتسويقية والمستند (Strategy Execution & Doc)',
+      fin: '4. الجدوى المالية ونظام المدفوعات والعائد (Financial Viability & ROI)',
+      inn: '5. تميز الخطة وجودة العرض والمستند (Strategy Differentiation & Pitch)'
+    };
 
   container.innerHTML = `
     <div style="margin-bottom:20px;">
@@ -2044,7 +2231,7 @@ async function handleLoginSubmit(e) {
   const pass = passInput ? passInput.value : '';
 
   if (!email || !pass) {
-    showToast(state.lang === 'ar' ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور' : 'Email and password are required', 'error');
+    showToast('يرجى إدخال البريد الإلكتروني وكلمة المرور', 'error');
     return false;
   }
 
@@ -2058,9 +2245,19 @@ async function handleLoginSubmit(e) {
     state.isLajnaOrAdmin = data.user.role === 'lajna' || data.user.role === 'admin';
     localStorage.setItem('mlic_token', data.token);
     localStorage.setItem('agrivers_token', data.token);
-    showToast(state.lang === 'ar' ? `مرحباً بك، ${data.user.name}!` : `Welcome back, ${data.user.name}!`, 'success');
+
+    const wizTeamName = document.getElementById('wiz-team-name');
+    const wizTeamMembers = document.getElementById('wiz-team-members');
+    if (wizTeamName) wizTeamName.value = '';
+    if (wizTeamMembers) wizTeamMembers.value = '';
+
+    showToast(`مرحباً بك، ${data.user.group_name || data.user.name}!`, 'success');
     closeModal('auth-modal');
     await loadInitialData();
+    if (state.postAuthRedirectToSubmit) {
+      state.activeView = 'submit';
+      state.postAuthRedirectToSubmit = false;
+    }
     renderApp();
   } catch (err) {
     console.error('Login error:', err);
@@ -2078,25 +2275,61 @@ async function handleRegisterSubmit(e) {
   const pass = document.getElementById('reg-password')?.value;
   const role = document.getElementById('reg-role')?.value || 'participant';
   const org = document.getElementById('reg-org')?.value.trim() || '';
+  const groupName = document.getElementById('reg-group-name')?.value.trim() || '';
 
   if (!name || !email || !pass) {
-    showToast(state.lang === 'ar' ? 'يرجى تعبئة الحقول الإلزامية' : 'All required fields must be filled', 'error');
+    showToast('يرجى تعبئة جميع الحقول الإلزامية', 'error');
     return false;
+  }
+
+  const payload = {
+    name,
+    email,
+    password: pass,
+    role,
+    organization: org
+  };
+
+  if (role === 'participant') {
+    if (!groupName) {
+      showToast('يرجى إدخال اسم المجموعة المشاركة', 'error');
+      return false;
+    }
+    const extraMembers = getRegisterExtraMembers();
+    const parsedGroup = parseGroupMembersList(extraMembers, name);
+    if (parsedGroup.count < 2) {
+      showToast('يشترط تسجيل مجموعة مكونة من عضوين (2) مختلفين على الأقل (لا يُسمح بالمشاركة الفردية).', 'error');
+      return false;
+    }
+    payload.group_name = groupName;
+    payload.group_members = parsedGroup.members;
+    payload.organization = groupName;
   }
 
   try {
     const data = await api('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password: pass, role, organization: org })
+      body: JSON.stringify(payload)
     });
     state.token = data.token;
     state.currentUser = data.user;
     state.isLajnaOrAdmin = data.user.role === 'lajna' || data.user.role === 'admin';
     localStorage.setItem('mlic_token', data.token);
     localStorage.setItem('agrivers_token', data.token);
-    showToast(data.message || 'Account created successfully!', 'success');
+
+    const wizTeamName = document.getElementById('wiz-team-name');
+    const wizTeamMembers = document.getElementById('wiz-team-members');
+    if (wizTeamName) wizTeamName.value = '';
+    if (wizTeamMembers) wizTeamMembers.value = '';
+
+    resetRegisterGroupForm();
+    showToast(data.message || 'تم تسجيل المجموعة بنجاح!', 'success');
     closeModal('auth-modal');
     await loadInitialData();
+    if (state.postAuthRedirectToSubmit) {
+      state.activeView = 'submit';
+      state.postAuthRedirectToSubmit = false;
+    }
     renderApp();
   } catch (err) {
     console.error('Register error:', err);

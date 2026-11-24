@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(32) NOT NULL DEFAULT 'participant', -- 'participant', 'lajna', 'admin'
     organization VARCHAR(255) DEFAULT '',
+    group_name VARCHAR(255) DEFAULT '',
+    group_members TEXT DEFAULT '',
     bio TEXT DEFAULT '',
     is_approved INT DEFAULT 1,                       -- Only Admin can approve Lajna (1=approved, 0=pending)
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

@@ -54,9 +54,9 @@ ${schemaSQL}
 
   const users = await db.all('SELECT * FROM users');
   for (const u of users) {
-    exportSQL += `INSERT INTO users (id, name, email, password_hash, role, organization, bio, is_approved, created_at)
-VALUES (${escapeSQL(u.id)}, ${escapeSQL(u.name)}, ${escapeSQL(u.email)}, ${escapeSQL(u.password_hash)}, ${escapeSQL(u.role)}, ${escapeSQL(u.organization)}, ${escapeSQL(u.bio)}, ${u.is_approved === 1 || u.is_approved === true ? 1 : 0}, ${escapeSQL(u.created_at)})
-ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email, role = EXCLUDED.role, is_approved = EXCLUDED.is_approved;\n`;
+    exportSQL += `INSERT INTO users (id, name, email, password_hash, role, organization, group_name, group_members, bio, is_approved, created_at)
+VALUES (${escapeSQL(u.id)}, ${escapeSQL(u.name)}, ${escapeSQL(u.email)}, ${escapeSQL(u.password_hash)}, ${escapeSQL(u.role)}, ${escapeSQL(u.organization)}, ${escapeSQL(u.group_name || '')}, ${escapeSQL(u.group_members || '')}, ${escapeSQL(u.bio)}, ${u.is_approved === 1 || u.is_approved === true ? 1 : 0}, ${escapeSQL(u.created_at)})
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email, role = EXCLUDED.role, group_name = EXCLUDED.group_name, group_members = EXCLUDED.group_members, is_approved = EXCLUDED.is_approved;\n`;
   }
 
   exportSQL += '\n-- Insert Challenges\n';

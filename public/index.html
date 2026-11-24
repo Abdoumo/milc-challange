@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MLIC CHALLENGE - دراسات الجدوى ولجنة التحكيم</title>
-  <link rel="stylesheet" href="style.css?v=20261124_v7">
+  <link rel="stylesheet" href="style.css?v=20261124_v11">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
+
 <body>
 
   <!-- Main Sticky Navbar -->
@@ -30,10 +34,12 @@
                 <stop offset="100%" stop-color="#090d16" />
               </linearGradient>
             </defs>
-            <rect width="36" height="36" rx="10" fill="url(#mlicBg)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2"/>
-            <path d="M8 26V11L18 19L28 11V26" stroke="url(#mlicGrad)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="18" cy="19" r="2.4" fill="#38bdf8"/>
-            <circle cx="18" cy="8.5" r="1.8" fill="#10b981"/>
+            <rect width="36" height="36" rx="10" fill="url(#mlicBg)" stroke="rgba(255,255,255,0.15)"
+              stroke-width="1.2" />
+            <path d="M8 26V11L18 19L28 11V26" stroke="url(#mlicGrad)" stroke-width="2.8" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <circle cx="18" cy="19" r="2.4" fill="#38bdf8" />
+            <circle cx="18" cy="8.5" r="1.8" fill="#10b981" />
           </svg>
         </div>
         <div class="brand-info">
@@ -51,61 +57,64 @@
         <div class="mobile-drawer-user" id="mobile-drawer-user"></div>
         <ul class="nav-pill-group">
           <li class="nav-item active" data-view="challenges">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 01-1.92-3.5A5.002 5.002 0 0115 10c0 1.5-.7 2.8-1.92 3.5A4.002 4.002 0 0112 14z"/></svg>
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14H8a4 4 0 01-1.92-3.5A5.002 5.002 0 0115 10c0 1.5-.7 2.8-1.92 3.5A4.002 4.002 0 0112 14z" />
+            </svg>
             <span id="nav-label-challenges">الأفكار المطروحة</span>
           </li>
           <li class="nav-item" data-view="submit">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/></svg>
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                clip-rule="evenodd" />
+            </svg>
             <span id="nav-label-submit">تقديم دراسة</span>
           </li>
           <li class="nav-item" data-view="my-submission" id="nav-my-sub" style="display:none;">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+            </svg>
             <span id="nav-label-my-sub">دراستي</span>
           </li>
           <li class="nav-item" data-view="lajna">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
+                clip-rule="evenodd" />
+            </svg>
             <span id="nav-label-lajna">لجنة التحكيم</span>
             <span class="nav-counter" id="nav-lajna-badge">0</span>
           </li>
           <li class="nav-item" data-view="leaderboard">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2 5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z" clip-rule="evenodd"/></svg>
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2 5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z"
+                clip-rule="evenodd" />
+            </svg>
             <span id="nav-label-leaderboard">الفائزون</span>
           </li>
           <li class="nav-item nav-item-admin" data-view="admin-lajna" id="nav-admin-approvals" style="display:none;">
-            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+            <svg class="nav-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+            </svg>
             <span id="nav-label-admin-approvals">اعتماد المحكمين</span>
             <span class="nav-counter counter-amber" id="nav-pending-badge" style="display:none;">0</span>
           </li>
         </ul>
-        <div class="mobile-drawer-footer">
-          <button type="button" class="mobile-drawer-db-btn" onclick="navigateTo('db-info')">
-            <span class="pulse-dot"></span>
-            <span id="mobile-db-label">حالة قاعدة البيانات (PostgreSQL)</span>
-          </button>
-        </div>
       </nav>
 
       <!-- Right Nav Controls -->
       <div class="nav-actions">
-        <!-- Live Database Status Pill -->
-        <button class="nav-db-pill" onclick="navigateTo('db-info')" title="حالة قاعدة البيانات والتخزين السري">
-          <span class="pulse-dot"></span>
-          <span class="db-pill-label">PostgreSQL</span>
-        </button>
-
-        <!-- Segmented Language Switcher -->
-        <div class="lang-segmented-control" onclick="toggleLanguage()" title="تبديل اللغة / Switch Language">
-          <span class="lang-opt" id="lang-ar-label">عربي</span>
-          <span class="lang-opt" id="lang-en-label">EN</span>
-        </div>
-
         <!-- User Authentication & Profile Pill -->
         <div id="nav-user-container">
           <!-- Populated dynamically by app.js -->
         </div>
 
         <!-- Mobile Hamburger Toggle Button -->
-        <button type="button" class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu()" aria-label="Toggle navigation" aria-expanded="false">
+        <button type="button" class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileMenu()"
+          aria-label="Toggle navigation" aria-expanded="false">
           <span class="hamburger-bar bar-1"></span>
           <span class="hamburger-bar bar-2"></span>
           <span class="hamburger-bar bar-3"></span>
@@ -127,7 +136,9 @@
       </div>
       <h2>مسابقتان للابتكار: استراتيجية تسويق متكاملة أو أفضل فكرة ضمن محور</h2>
       <p>
-        شارك في <strong>المسابقة الأولى</strong> عبر تقديم أفضل استراتيجية تسويق ودراسة جدوى للأفكار المطروحة من الإدارة، أو شارك في <strong>المسابقة الثانية</strong> بابتكار أفضل فكرة مشروع ضمن المحور الذي تحدده الإدارة (مثل: الطبيعة والاستدامة...). جميع الدراسات سرية ومحفوظة مباشرة في قاعدة البيانات للجنة التحكيم (Lajna).
+        شارك في <strong>المسابقة الأولى</strong> عبر تقديم أفضل استراتيجية تسويق ودراسة جدوى للأفكار المطروحة من
+        الإدارة، أو شارك في <strong>المسابقة الثانية</strong> بابتكار أفضل فكرة مشروع ضمن المحور الذي تحدده الإدارة
+        (مثل: الطبيعة والاستدامة...). جميع الدراسات سرية ومحفوظة مباشرة في قاعدة البيانات للجنة التحكيم (Lajna).
       </p>
 
       <div class="hero-actions">
@@ -168,7 +179,8 @@
       <div class="section-header">
         <div>
           <h2 class="section-title">🏆 المسابقتان والتحديات المطروحة</h2>
-          <p class="section-subtitle">اختر المسابقة التي تناسبك: قدّم أفضل استراتيجية تسويق لفكرة مطروحة، أو ابتكر أفضل فكرة في محور الإدارة</p>
+          <p class="section-subtitle">اختر المسابقة التي تناسبك: قدّم أفضل استراتيجية تسويق لفكرة مطروحة، أو ابتكر أفضل
+            فكرة في محور الإدارة</p>
         </div>
         <!-- Admin Add/Edit Idea & Theme Buttons -->
         <div id="admin-ideas-bar" class="admin-ideas-actions" style="display:none;">
@@ -196,7 +208,8 @@
     <div id="view-submit" style="display:none;">
       <div class="section-header section-header-submit">
         <div>
-          <h2 class="section-title" id="submit-view-title">🚀 إعداد دراسة الجدوى وإرفاق المستند <span class="title-tag-en">(Submission to DB)</span></h2>
+          <h2 class="section-title" id="submit-view-title">🚀 إعداد دراسة الجدوى وإرفاق المستند <span
+              class="title-tag-en">(Submission to DB)</span></h2>
           <p class="section-subtitle confidential-subtitle">
             <span>🔒</span>
             <span>دراستك محمية وسرية: تُحفظ مباشرة في قاعدة البيانات للمراجعة الحصرية من قبل لجنة التحكيم فقط</span>
@@ -204,7 +217,9 @@
         </div>
       </div>
 
-      <div class="wizard-card">
+      <div id="wizard-auth-gate" style="display:none;"></div>
+
+      <div class="wizard-card" id="wizard-main-card">
         <div class="wizard-steps" id="wizard-steps-container">
           <!-- Steps rendered dynamically -->
         </div>
@@ -224,6 +239,8 @@
           <div id="wizard-comp2-closed-notice" style="display:none;"></div>
 
           <div id="wizard-step1-fields">
+            <div id="wizard-group-banner" class="wizard-group-banner" style="display:none;"></div>
+
             <div class="form-group">
               <label class="form-label" id="wiz-label-track">فكرة التحدي المرتبطة *</label>
               <select class="form-control" id="wizard-challenge-select">
@@ -238,17 +255,20 @@
 
             <div class="form-group">
               <label class="form-label" id="wiz-label-pitch">الملخص الموجز للاستراتيجية / المشروع (Pitch) *</label>
-              <textarea class="form-control" id="wiz-pitch" placeholder="اشرح استراتيجيتك التسويقية أو فكرتك في جملتين إلى ثلاث جمل واضحة توضح القيمة المضافة..."></textarea>
+              <textarea class="form-control" id="wiz-pitch"
+                placeholder="اشرح استراتيجيتك التسويقية أو فكرتك في جملتين إلى ثلاث جمل واضحة توضح القيمة المضافة..."></textarea>
             </div>
 
             <div class="form-grid-2">
               <div class="form-group">
-                <label class="form-label">اسم الفريق</label>
-                <input type="text" class="form-control" id="wiz-team-name" placeholder="مثال: فريق الابتكار والنمو">
+                <label class="form-label">اسم المجموعة المشاركة *</label>
+                <input type="text" class="form-control" id="wiz-team-name" placeholder="مثال: فريق الابتكار والنمو"
+                  oninput="updateWizardGroupStatus()">
               </div>
               <div class="form-group">
-                <label class="form-label">أسماء وتخصصات الأعضاء</label>
-                <input type="text" class="form-control" id="wiz-team-members" placeholder="سامي (تسويق)، سلمى (مالية)، عمر (برمجة)">
+                <label class="form-label">أعضاء المجموعة (عضوان 2 على الأقل، مفصولون بفاصلة ، ) *</label>
+                <input type="text" class="form-control" id="wiz-team-members"
+                  placeholder="سامي بوعلام، سلمى بن علي، عمر حداد" oninput="updateWizardGroupStatus()">
               </div>
             </div>
 
@@ -261,15 +281,17 @@
         <!-- STEP 2: Target Audience -->
         <div id="wizard-step-2" class="wizard-pane" style="display:none;">
           <h3 class="wizard-pane-title">2. دراسة الجمهور المستهدف (Target Audience & Market Fit)</h3>
-          
+
           <div class="form-group">
             <label class="form-label">الشريحة الأساسية المستهدفة (Primary Segment) *</label>
-            <input type="text" class="form-control" id="aud-segment" placeholder="مثال: صغار ومتوسطو مزارعي الأشجار المثمرة والخضار">
+            <input type="text" class="form-control" id="aud-segment"
+              placeholder="مثال: صغار ومتوسطو مزارعي الأشجار المثمرة والخضار">
           </div>
 
           <div class="form-group">
             <label class="form-label">نقاط الألم والمشاكل الحرجة التي يعاني منها العميل (Customer Pain Points) *</label>
-            <textarea class="form-control" id="aud-pains" placeholder="مثال: ارتفاع تكاليف الوقود، هدر 40% من مياه السقي، تلف المحاصيل..."></textarea>
+            <textarea class="form-control" id="aud-pains"
+              placeholder="مثال: ارتفاع تكاليف الوقود، هدر 40% من مياه السقي، تلف المحاصيل..."></textarea>
           </div>
 
           <div class="form-group">
@@ -280,11 +302,13 @@
           <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label">تقدير حجم السوق (TAM / SAM / SOM)</label>
-              <input type="text" class="form-control" id="aud-market-size" placeholder="TAM: 100K مزرعة | SAM: 25K | SOM: 500">
+              <input type="text" class="form-control" id="aud-market-size"
+                placeholder="TAM: 100K مزرعة | SAM: 25K | SOM: 500">
             </div>
             <div class="form-group">
               <label class="form-label">شخصية العميل المشتري (Buyer Persona)</label>
-              <input type="text" class="form-control" id="aud-persona" placeholder="الحاج بلقاسم (48 سنة)، يبحث عن حل سهل وبسيط يقلل كلفة الديزل">
+              <input type="text" class="form-control" id="aud-persona"
+                placeholder="الحاج بلقاسم (48 سنة)، يبحث عن حل سهل وبسيط يقلل كلفة الديزل">
             </div>
           </div>
 
@@ -308,7 +332,8 @@
               </div>
               <ul class="swot-list" id="swot-list-strengths"></ul>
               <div class="swot-add-row">
-                <input type="text" class="form-control" id="swot-input-strengths" placeholder="أضف نقطة قوة واضغط إضافة...">
+                <input type="text" class="form-control" id="swot-input-strengths"
+                  placeholder="أضف نقطة قوة واضغط إضافة...">
                 <button class="btn btn-sm btn-primary" onclick="addSwotItem('strengths')">+</button>
               </div>
             </div>
@@ -374,11 +399,13 @@
               </div>
               <div class="form-group">
                 <label class="form-label">المواصفات الفنية ومكونات الحل</label>
-                <textarea class="form-control" id="feas-tech-summary" placeholder="المعدات، الحساسات، الخوادم، البرمجيات المستخدمة..."></textarea>
+                <textarea class="form-control" id="feas-tech-summary"
+                  placeholder="المعدات، الحساسات، الخوادم، البرمجيات المستخدمة..."></textarea>
               </div>
               <div class="form-group">
                 <label class="form-label">احتياجات البنية التحتية</label>
-                <input type="text" class="form-control" id="feas-tech-infra" placeholder="ورشة تجميع، سيرفر سحابي، خط فحص...">
+                <input type="text" class="form-control" id="feas-tech-infra"
+                  placeholder="ورشة تجميع، سيرفر سحابي، خط فحص...">
               </div>
             </div>
 
@@ -386,15 +413,18 @@
               <h4>🛍️ الجدوى التسويقية والتجارية</h4>
               <div class="form-group">
                 <label class="form-label">حجم الطلب المتوقع في السوق</label>
-                <textarea class="form-control" id="feas-mkt-demand" placeholder="مدى حاجة المزارعين أو التجار ومعدل النمو السنوي..."></textarea>
+                <textarea class="form-control" id="feas-mkt-demand"
+                  placeholder="مدى حاجة المزارعين أو التجار ومعدل النمو السنوي..."></textarea>
               </div>
               <div class="form-group">
                 <label class="form-label">الميزة التنافسية وعناصر التفوق</label>
-                <input type="text" class="form-control" id="feas-mkt-edge" placeholder="السعر المنخفض، القرب الميداني، سهولة الاستخدام...">
+                <input type="text" class="form-control" id="feas-mkt-edge"
+                  placeholder="السعر المنخفض، القرب الميداني، سهولة الاستخدام...">
               </div>
               <div class="form-group">
                 <label class="form-label">قنوات التسويق والوصول للزبائن</label>
-                <input type="text" class="form-control" id="feas-mkt-channels" placeholder="التعاونيات الزراعية، المعارض، منصات التواصل...">
+                <input type="text" class="form-control" id="feas-mkt-channels"
+                  placeholder="التعاونيات الزراعية، المعارض، منصات التواصل...">
               </div>
             </div>
 
@@ -404,7 +434,8 @@
               <div class="form-grid-3">
                 <div class="form-group">
                   <label class="form-label">رأس المال التأسيسي (CAPEX $)</label>
-                  <input type="number" class="form-control" id="fin-capex" value="18000" oninput="updateFinancialCalc()">
+                  <input type="number" class="form-control" id="fin-capex" value="18000"
+                    oninput="updateFinancialCalc()">
                 </div>
                 <div class="form-group">
                   <label class="form-label">المصاريف التشغيلية الشهرية (OPEX $)</label>
@@ -444,7 +475,8 @@
 
               <div class="form-group" style="margin-top:18px; margin-bottom:0;">
                 <label class="form-label">💳 نظام المدفوعات ونموذج الفوترة (Payment System & Billing Model)</label>
-                <input type="text" class="form-control" id="fin-payment-system" placeholder="مثال: بوابات الدفع (Stripe / بطاقات بنكية)، خطط اشتراك شهرية وسنوية، ونظام رصيد مهام (Pay-per-Task / API Credits)">
+                <input type="text" class="form-control" id="fin-payment-system"
+                  placeholder="مثال: بوابات الدفع (Stripe / بطاقات بنكية)، خطط اشتراك شهرية وسنوية، ونظام رصيد مهام (Pay-per-Task / API Credits)">
               </div>
             </div>
 
@@ -454,11 +486,13 @@
               <div class="form-grid-2">
                 <div class="form-group">
                   <label class="form-label">التراخيص القانونية والموافقات</label>
-                  <input type="text" class="form-control" id="feas-ops-permits" placeholder="سجل تجاري، اعتماد سلامة، رخص الترددات...">
+                  <input type="text" class="form-control" id="feas-ops-permits"
+                    placeholder="سجل تجاري، اعتماد سلامة، رخص الترددات...">
                 </div>
                 <div class="form-group">
                   <label class="form-label">الهيكل الإداري وفريق التشغيل</label>
-                  <input type="text" class="form-control" id="feas-ops-team" placeholder="مدير المشروع، مهندس صيانة، مسؤول تسويق...">
+                  <input type="text" class="form-control" id="feas-ops-team"
+                    placeholder="مدير المشروع، مهندس صيانة، مسؤول تسويق...">
                 </div>
               </div>
             </div>
@@ -474,14 +508,16 @@
         <div id="wizard-step-5" class="wizard-pane" style="display:none;">
           <h3 class="wizard-pane-title">5. إرفاق مستند دراسة الجدوى والإرسال المباشر لقاعدة البيانات</h3>
           <p class="wizard-pane-desc">
-            يمكنك إرفاق ملف دراسة الجدوى الكامل (Word Doc، PDF، عرض تقديمي PPTX، أو Excel). سيُحفظ المشروع والمستند في قاعدة البيانات لتحكيمه من قِبل اللجنة حصرياً.
+            يمكنك إرفاق ملف دراسة الجدوى الكامل (Word Doc، PDF، عرض تقديمي PPTX، أو Excel). سيُحفظ المشروع والمستند في
+            قاعدة البيانات لتحكيمه من قِبل اللجنة حصرياً.
           </p>
 
           <!-- Document Upload Box -->
           <div class="form-group">
             <label class="form-label">📄 إرفاق مستند الدراسة (Post Doc: PDF / Word / PPTX / Excel)</label>
             <div class="upload-dropzone" onclick="document.getElementById('doc-file-input').click()">
-              <input type="file" id="doc-file-input" style="display:none;" accept=".pdf,.doc,.docx,.pptx,.xlsx,.zip" onchange="handleDocFileSelect(event)">
+              <input type="file" id="doc-file-input" style="display:none;" accept=".pdf,.doc,.docx,.pptx,.xlsx,.zip"
+                onchange="handleDocFileSelect(event)">
               <div class="upload-icon">📁</div>
               <div class="upload-title">اضغط هنا لاختيار ملف المستند من جهازك</div>
               <div class="upload-hint">يدعم صيغ PDF, DOCX, DOC, PPTX, XLSX حتى 20 ميغابايت</div>
@@ -494,7 +530,8 @@
           <div class="confidential-banner">
             <span class="confidential-icon">🔒</span>
             <div class="confidential-text">
-              <strong>حفظ سري ومؤمن:</strong> لن يظهر مشروعك أو مستندك لأي متسابقين آخرين على الموقع. سيتم إرساله مباشرة لقاعدة البيانات ليطلع عليه أعضاء لجنة التحكيم (Lajna) لمنح الدرجات واختيار الفائزين.
+              <strong>حفظ سري ومؤمن:</strong> لن يظهر مشروعك أو مستندك لأي متسابقين آخرين على الموقع. سيتم إرساله مباشرة
+              لقاعدة البيانات ليطلع عليه أعضاء لجنة التحكيم (Lajna) لمنح الدرجات واختيار الفائزين.
             </div>
           </div>
 
@@ -514,7 +551,8 @@
       <div class="section-header">
         <div>
           <h2 class="section-title">📂 دراستي المقدمة ومستندي في قاعدة البيانات</h2>
-          <p class="section-subtitle">عرض دراسة الجدوى والمستند الذي قمت بحفظه، ومتابعة حالة المراجعة لدى لجنة التحكيم</p>
+          <p class="section-subtitle">عرض دراسة الجدوى والمستند الذي قمت بحفظه، ومتابعة حالة المراجعة لدى لجنة التحكيم
+          </p>
         </div>
         <div>
           <button class="btn btn-primary btn-sm" onclick="navigateTo('submit')">+ تقديم دراسة جديدة</button>
@@ -538,7 +576,8 @@
       <div class="section-header">
         <div>
           <h2 class="section-title">👥 إدارة واعتماد أعضاء لجنة التحكيم (Lajna Approval Panel)</h2>
-          <p class="section-subtitle">صلاحية حصرية لمدير المسابقة (Admin): فحص واعتماد أو تجميد طلبات الانضمام للجنة التحكيم</p>
+          <p class="section-subtitle">صلاحية حصرية لمدير المسابقة (Admin): فحص واعتماد أو تجميد طلبات الانضمام للجنة
+            التحكيم</p>
         </div>
       </div>
 
@@ -550,13 +589,6 @@
     <!-- 6. VIEW: LEADERBOARD & WINNERS PODIUM -->
     <div id="view-leaderboard" style="display:none;">
       <div id="leaderboard-view-content">
-        <!-- Rendered dynamically -->
-      </div>
-    </div>
-
-    <!-- 6. VIEW: DATABASE & POSTGRESQL -->
-    <div id="view-db-info" style="display:none;">
-      <div id="db-view-content">
         <!-- Rendered dynamically -->
       </div>
     </div>
@@ -592,11 +624,13 @@
 
         <div class="form-group">
           <label class="form-label" id="modal-idea-label-title">عنوان فكرة المشروع / التحدي *</label>
-          <input type="text" class="form-control" id="modal-idea-title" placeholder="مثال: منظومة الأتمتة بالذكاء الاصطناعي...">
+          <input type="text" class="form-control" id="modal-idea-title"
+            placeholder="مثال: منظومة الأتمتة بالذكاء الاصطناعي...">
         </div>
         <div class="form-group">
           <label class="form-label" id="modal-idea-label-category">التصنيف أو المجال</label>
-          <input type="text" class="form-control" id="modal-idea-category" placeholder="مثال: AI, Nature & Sustainability...">
+          <input type="text" class="form-control" id="modal-idea-category"
+            placeholder="مثال: AI, Nature & Sustainability...">
         </div>
         <div class="form-group">
           <label class="form-label" id="modal-idea-label-summary">نبذة ملخصة</label>
@@ -604,15 +638,18 @@
         </div>
         <div class="form-group">
           <label class="form-label" id="modal-idea-label-problem">المشكلة المطروحة والمطلوب حلها *</label>
-          <textarea class="form-control" id="modal-idea-problem" placeholder="صف التحدي أو شروط المحور المطلوبة..."></textarea>
+          <textarea class="form-control" id="modal-idea-problem"
+            placeholder="صف التحدي أو شروط المحور المطلوبة..."></textarea>
         </div>
         <div class="form-group">
           <label class="form-label" id="modal-idea-label-outcomes">المخرجات والمستندات المتوقعة</label>
-          <textarea class="form-control" id="modal-idea-outcomes" placeholder="1. استراتيجية تسويق أو فكرة مبتكرة&#10;2. ملف مستند PDF..."></textarea>
+          <textarea class="form-control" id="modal-idea-outcomes"
+            placeholder="1. استراتيجية تسويق أو فكرة مبتكرة&#10;2. ملف مستند PDF..."></textarea>
         </div>
         <div class="form-group" style="margin-bottom:0;">
           <label class="form-label">المنحة أو الجائزة المرصودة</label>
-          <input type="text" class="form-control" id="modal-idea-reward" placeholder="مثال: جائزة المركز الأول + احتضان رسمي">
+          <input type="text" class="form-control" id="modal-idea-reward"
+            placeholder="مثال: جائزة المركز الأول + احتضان رسمي">
         </div>
       </div>
       <div class="modal-footer">
@@ -622,19 +659,28 @@
     </div>
   </div>
 
-  <!-- MODAL: Auth (Sign In / Register) -->
+  <!-- MODAL: Auth (Sign In / Register Group / Profile) -->
   <div class="modal-overlay" id="auth-modal">
-    <div class="modal-content" style="max-width:460px;">
+    <div class="modal-content" style="max-width:500px;">
       <div class="modal-header">
-        <div style="display:flex; gap:12px;">
-          <button class="btn btn-sm btn-outline active" id="auth-tab-login" onclick="openAuthModal('login')">تسجيل الدخول</button>
-          <button class="btn btn-sm btn-outline" id="auth-tab-reg" onclick="openAuthModal('register')">إنشاء حساب جديد</button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-sm btn-outline active" id="auth-tab-login" onclick="openAuthModal('login')">تسجيل
+            الدخول</button>
+          <button class="btn btn-sm btn-outline" id="auth-tab-reg" onclick="openAuthModal('register')">إنشاء حساب
+            مجموعة</button>
+          <button class="btn btn-sm btn-outline" id="auth-tab-profile" onclick="openAuthModal('profile')"
+            style="display:none;">بيانات الحساب</button>
         </div>
         <button class="modal-close" onclick="closeModal('auth-modal')">×</button>
       </div>
 
       <div class="modal-body">
+        <div id="modal-profile-view" style="display:none;"></div>
+
         <form id="modal-login-form" onsubmit="handleLoginSubmit(event); return false;">
+          <div class="auth-open-banner">
+            👥 <span>التسجيل مفتوح للجميع — سجّل الدخول بحساب مجموعتك للمشاركة في المسابقة.</span>
+          </div>
           <div class="form-group">
             <label class="form-label">البريد الإلكتروني</label>
             <input type="email" class="form-control" id="login-email" required placeholder="name@example.com">
@@ -644,34 +690,73 @@
             <input type="password" class="form-control" id="login-password" required placeholder="••••••••">
           </div>
           <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">تسجيل الدخول</button>
+          <div class="auth-switch-hint">
+            ليس لديكم حساب مجموعة بعد؟ <button type="button" class="auth-link-btn"
+              onclick="openAuthModal('register')">إنشاء حساب مجموعة الآن (متاح للجميع)</button>
+          </div>
         </form>
 
         <form id="modal-register-form" style="display:none;" onsubmit="handleRegisterSubmit(event); return false;">
-          <div class="form-group">
-            <label class="form-label">الاسم الكامل *</label>
-            <input type="text" class="form-control" id="reg-name" required placeholder="مثال: سامي بوعلام">
+          <div class="auth-open-banner">
+            ✨ <span>التسجيل مفتوح للجميع مجاناً • يُشترط للمشاركة تكوين مجموعة من عضوين (2) على الأقل.</span>
           </div>
+
+          <div class="form-group">
+            <label class="form-label">الدور في المنصة *</label>
+            <select class="form-control" id="reg-role" onchange="toggleRegisterRoleUI()">
+              <option value="participant">👥 مجموعة مشاركة (فريق من 2+ أعضاء — دخول فوري)</option>
+              <option value="lajna">⚖️ عضو لجنة تحكيم (Lajna Judge — يتطلب اعتماد الأدمن)</option>
+              <option value="admin">👑 منظم المسابقة (Admin)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" id="reg-name-label">اسم قائد المجموعة (العضو الأول) *</label>
+            <input type="text" class="form-control" id="reg-name" required placeholder="مثال: سامي بوعلام"
+              oninput="updateRegMembersCount()">
+          </div>
+
+          <div id="reg-group-fields" class="group-reg-box">
+            <div class="form-group">
+              <label class="form-label">اسم المجموعة المشاركة (Group Name) *</label>
+              <input type="text" class="form-control" id="reg-group-name" required
+                placeholder="مثال: فريق النخبة للتسويق">
+            </div>
+
+            <div class="form-group" style="margin-bottom:0;">
+              <div class="reg-members-header">
+                <label class="form-label" style="margin-bottom:0;">أعضاء المجموعة الآخرون (عضو واحد إضافي على الأقل)
+                  *</label>
+                <span class="reg-members-badge" id="reg-members-count-badge">👥 الأعضاء: 0 / 2 كحد أدنى</span>
+              </div>
+              <div id="reg-extra-members-list" class="reg-members-list">
+                <div class="reg-member-row">
+                  <input type="text" class="form-control reg-member-input" id="reg-member-2" required
+                    placeholder="اسم العضو الثاني (إلزامي) *" oninput="updateRegMembersCount()">
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;"
+                onclick="addRegisterMemberInput()">
+                ➕ إضافة عضو آخر للمجموعة
+              </button>
+            </div>
+          </div>
+
+          <div id="reg-org-field" class="form-group" style="display:none;">
+            <label class="form-label">المؤسسة / الجهة</label>
+            <input type="text" class="form-control" id="reg-org" placeholder="اسم الجامعة أو اللجنة...">
+          </div>
+
           <div class="form-group">
             <label class="form-label">البريد الإلكتروني *</label>
-            <input type="email" class="form-control" id="reg-email" required placeholder="sami@example.com">
+            <input type="email" class="form-control" id="reg-email" required placeholder="team@example.com">
           </div>
           <div class="form-group">
             <label class="form-label">كلمة المرور *</label>
             <input type="password" class="form-control" id="reg-password" required placeholder="••••••••">
           </div>
-          <div class="form-group">
-            <label class="form-label">الدور في المنصة *</label>
-            <select class="form-control" id="reg-role">
-              <option value="participant">رائد أعمال / متسابق (Participant)</option>
-              <option value="lajna">عضو لجنة تحكيم (Lajna Judge)</option>
-              <option value="admin">منظم المسابقة (Admin)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">المؤسسة / الفريق</label>
-            <input type="text" class="form-control" id="reg-org" placeholder="اسم الشركة أو التعاونية...">
-          </div>
-          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">إنشاء الحساب</button>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">إنشاء الحساب
+            والمتابعة</button>
         </form>
       </div>
     </div>
@@ -701,7 +786,8 @@
       <div class="modal-body" id="eval-modal-body"></div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('eval-modal')">إلغاء</button>
-        <button class="btn btn-lajna" onclick="submitLajnaEvaluation()">✓ اعتماد وحفظ تقييم اللجنة في قاعدة البيانات</button>
+        <button class="btn btn-lajna" onclick="submitLajnaEvaluation()">✓ اعتماد وحفظ تقييم اللجنة في قاعدة
+          البيانات</button>
       </div>
     </div>
   </div>
@@ -712,13 +798,15 @@
   <!-- Footer -->
   <footer>
     <div class="container footer-inner">
-      <div>🏆 <strong>MLIC CHALLENGE</strong> © 2026 - منصة تحدي دراسات الجدوى وسوات مع تحكيم اللجنة ولائحة الفائزين</div>
+      <div>🏆 <strong>MLIC CHALLENGE</strong> © 2026 - منصة تحدي دراسات الجدوى وسوات مع تحكيم اللجنة ولائحة الفائزين
+      </div>
       <div class="footer-meta">
-        🔒 Confidential Database Storage • PostgreSQL Ready
+        🔒 دراسات سرية ومحفوظة للجنة التحكيم فقط
       </div>
     </div>
   </footer>
 
-  <script src="app.js?v=20261124_v8"></script>
+  <script src="app.js?v=20261124_v11"></script>
 </body>
+
 </html>

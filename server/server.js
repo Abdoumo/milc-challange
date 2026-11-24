@@ -8,7 +8,6 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const db = require('./db');
 const { hashPassword, verifyPassword, generateToken, verifyToken } = require('./auth');
-const { checkPostgresConnection, exportToPostgresSQL, PG_CONFIG } = require('./postgres_client');
 const { seed } = require('./seed');
 
 const PORT = process.env.PORT || 3000;
@@ -75,6 +74,37 @@ function getAuthUser(req) {
   return verifyToken(token);
 }
 
+// Parse & deduplicate group members (case-insensitive) and optionally prepend leader
+function parseGroupMembers(rawMembers, leaderName = '') {
+  const list = [];
+  if (Array.isArray(rawMembers)) {
+    list.push(...rawMembers);
+  } else if (typeof rawMembers === 'string') {
+    list.push(...rawMembers.split(/[,،;؛\n]+/));
+  }
+
+  const seen = new Set();
+  const result = [];
+  const addUnique = (val) => {
+    const clean = String(val || '').trim();
+    if (!clean) return;
+    const key = clean.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(clean);
+    }
+  };
+
+  if (leaderName) addUnique(leaderName);
+  for (const item of list) addUnique(item);
+
+  return {
+    members: result,
+    formatted: result.join('، '),
+    count: result.length
+  };
+}
+
 // Initialize database
 db.initDatabase().catch(e => console.error('[DB Init]', e));
 
@@ -96,43 +126,80 @@ const server = http.createServer(async (req, res) => {
     // API: Authentication
     // -------------------------------------------------------------
     if (pathname === '/api/auth/register' && req.method === 'POST') {
-      const { name, email, password, role = 'participant', organization = '', bio = '' } = await parseBody(req);
-      if (!name || !email || !password) {
-        return sendJSON(res, 400, { error: 'Name, email, and password are required' });
+      const {
+        name,
+        email,
+        password,
+        role = 'participant',
+        organization = '',
+        group_name = '',
+        group_members = '',
+        bio = ''
+      } = await parseBody(req);
+
+      const cleanName = String(name || '').trim();
+      const cleanEmail = String(email || '').toLowerCase().trim();
+      if (!cleanName || !cleanEmail || !password) {
+        return sendJSON(res, 400, { error: 'الاسم والبريد الإلكتروني وكلمة المرور مطلوبة' });
       }
 
-      const existing = await db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase().trim()]);
+      const existing = await db.get('SELECT id FROM users WHERE email = ?', [cleanEmail]);
       if (existing) {
-        return sendJSON(res, 409, { error: 'An account with this email already exists' });
+        return sendJSON(res, 409, { error: 'يوجد حساب مسجل بهذا البريد الإلكتروني بالفعل' });
+      }
+
+      const validRole = ['participant', 'lajna', 'admin'].includes(role) ? role : 'participant';
+
+      let groupNameVal = '';
+      let orgVal = String(organization || '').trim();
+      let groupMembersVal = '';
+
+      // Enforce multi-member Group registration (min 2 distinct members, open to anyone)
+      if (validRole === 'participant') {
+        groupNameVal = String(group_name || organization || '').trim();
+        if (!groupNameVal) {
+          return sendJSON(res, 400, { error: 'يرجى إدخال اسم المجموعة للتسجيل والمشاركة في المسابقة.' });
+        }
+        const parsedGroup = parseGroupMembers(group_members, cleanName);
+        if (parsedGroup.count < 2) {
+          return sendJSON(res, 400, {
+            error: 'يشترط أن تتكون المجموعة من عضوين (2) على الأقل (القائد + عضو إضافي واحد مختلف على الأقل). المشاركة الفردية غير مسموحة.'
+          });
+        }
+        orgVal = groupNameVal;
+        groupMembersVal = parsedGroup.formatted;
       }
 
       const id = 'user_' + crypto.randomUUID().slice(0, 12);
       const passHash = hashPassword(password);
-      const validRole = ['participant', 'lajna', 'admin'].includes(role) ? role : 'participant';
-      
-      // CRITICAL: Only Admin can approve Lajna members! New lajna accounts start with is_approved = 0
+
+      // CRITICAL: Only Admin can approve Lajna members! Groups (participant) are auto-approved for anyone to sign up.
       const isApproved = validRole === 'lajna' ? 0 : 1;
       const now = new Date().toISOString();
 
       await db.run(`
-        INSERT INTO users (id, name, email, password_hash, role, organization, bio, is_approved, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [id, name.trim(), email.toLowerCase().trim(), passHash, validRole, organization, bio, isApproved, now]);
+        INSERT INTO users (id, name, email, password_hash, role, organization, group_name, group_members, bio, is_approved, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [id, cleanName, cleanEmail, passHash, validRole, orgVal, groupNameVal, groupMembersVal, bio, isApproved, now]);
 
-      const user = { 
-        id, 
-        name: name.trim(), 
-        email: email.toLowerCase().trim(), 
-        role: validRole, 
-        organization,
+      const user = {
+        id,
+        name: cleanName,
+        email: cleanEmail,
+        role: validRole,
+        organization: orgVal,
+        group_name: groupNameVal,
+        group_members: groupMembersVal,
         is_approved: isApproved === 1
       };
       const token = generateToken(user);
 
       return sendJSON(res, 201, {
-        message: validRole === 'lajna' 
-          ? 'تم إنشاء الحساب بنجاح! طلب عضويتك في لجنة التحكيم قيد اعتماد مدير المنصة (Admin).' 
-          : 'Account created successfully',
+        message: validRole === 'lajna'
+          ? 'تم إنشاء الحساب بنجاح! طلب عضويتك في لجنة التحكيم قيد اعتماد مدير المنصة (Admin).'
+          : validRole === 'participant'
+            ? `✓ تم تسجيل مجموعة "${groupNameVal}" بنجاح! يمكنك الآن المشاركة في المسابقة.`
+            : '✓ تم إنشاء حساب المنظم بنجاح!',
         user,
         token
       });
@@ -141,12 +208,12 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/auth/login' && req.method === 'POST') {
       const { email, password } = await parseBody(req);
       if (!email || !password) {
-        return sendJSON(res, 400, { error: 'Email and password are required' });
+        return sendJSON(res, 400, { error: 'يرجى إدخال البريد الإلكتروني وكلمة المرور' });
       }
 
       const user = await db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase().trim()]);
       if (!user || !verifyPassword(password, user.password_hash)) {
-        return sendJSON(res, 401, { error: 'Invalid email or password' });
+        return sendJSON(res, 401, { error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
       }
 
       const isApproved = user.is_approved === 1 || user.is_approved === true || user.role !== 'lajna';
@@ -156,14 +223,16 @@ const server = http.createServer(async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        organization: user.organization,
+        organization: user.organization || '',
+        group_name: user.group_name || '',
+        group_members: user.group_members || '',
         bio: user.bio,
         is_approved: isApproved
       };
       const token = generateToken(safeUser);
 
       return sendJSON(res, 200, {
-        message: 'Signed in successfully',
+        message: 'تم تسجيل الدخول بنجاح',
         user: safeUser,
         token
       });
@@ -175,18 +244,24 @@ const server = http.createServer(async (req, res) => {
         return sendJSON(res, 401, { error: 'Unauthorized or token expired' });
       }
 
-      const user = await db.get('SELECT id, name, email, role, organization, bio, is_approved, created_at FROM users WHERE id = ?', [authUser.id]);
+      const user = await db.get(
+        'SELECT id, name, email, role, organization, group_name, group_members, bio, is_approved, created_at FROM users WHERE id = ?',
+        [authUser.id]
+      );
       if (!user) {
         return sendJSON(res, 404, { error: 'User not found' });
       }
 
       const isApproved = user.is_approved === 1 || user.is_approved === true || user.role !== 'lajna';
 
-      return sendJSON(res, 200, { 
+      return sendJSON(res, 200, {
         user: {
           ...user,
+          organization: user.organization || '',
+          group_name: user.group_name || '',
+          group_members: user.group_members || '',
           is_approved: isApproved
-        } 
+        }
       });
     }
 
@@ -238,8 +313,8 @@ const server = http.createServer(async (req, res) => {
       await db.run('UPDATE users SET is_approved = ? WHERE id = ?', [newStatus, user_id]);
 
       return sendJSON(res, 200, {
-        message: approve 
-          ? `✓ تم اعتماد ${targetUser.name} كـ عضو رسمي في لجنة التحكيم بنجاح!` 
+        message: approve
+          ? `✓ تم اعتماد ${targetUser.name} كـ عضو رسمي في لجنة التحكيم بنجاح!`
           : `⏸️ تم تجميد صلاحية تحكيم ${targetUser.name}.`,
         user_id,
         is_approved: newStatus === 1
@@ -471,7 +546,18 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/submissions' && req.method === 'POST') {
       const authUser = getAuthUser(req);
       if (!authUser) {
-        return sendJSON(res, 401, { error: 'You must sign in to submit a proposal' });
+        return sendJSON(res, 401, { error: 'يجب تسجيل الدخول بحساب مجموعة للمشاركة وتقديم الدراسة.' });
+      }
+
+      const dbUser = await db.get(
+        'SELECT id, name, role, organization, group_name, group_members FROM users WHERE id = ?',
+        [authUser.id]
+      );
+      if (!dbUser) {
+        return sendJSON(res, 401, { error: 'الحساب غير موجود، يرجى تسجيل الدخول مجدداً.' });
+      }
+      if (dbUser.role === 'lajna') {
+        return sendJSON(res, 403, { error: 'حسابات لجنة التحكيم مخصصة للتقييم فقط؛ للمشاركة يرجى التسجيل بحساب مجموعة (2+ أعضاء).' });
       }
 
       const body = await parseBody(req);
@@ -491,7 +577,25 @@ const server = http.createServer(async (req, res) => {
       } = body;
 
       if (!challenge_id || !title || !pitch) {
-        return sendJSON(res, 400, { error: 'Challenge/Theme track, title, and pitch are required' });
+        return sendJSON(res, 400, { error: 'يرجى تحديد المسابقة وعنوان المشروع والملخص التنفيذي.' });
+      }
+
+      const finalTeamName = String(team_name || dbUser.group_name || '').trim();
+      const rawMembersInput = String(team_members || '').trim() ? team_members : (dbUser.group_members || '');
+      const parsedTeam = parseGroupMembers(rawMembersInput);
+
+      if (!finalTeamName || parsedTeam.count < 2) {
+        return sendJSON(res, 400, {
+          error: 'المشاركة مخصصة للمجموعات المسجلة فقط: يجب إدخال اسم المجموعة وأسماء عضوين (2) مختلفين على الأقل.'
+        });
+      }
+
+      // Sync group fields for pre-existing participant accounts that completed them on first submission
+      if (dbUser.role === 'participant' && (!dbUser.group_name || !dbUser.group_members)) {
+        await db.run(
+          'UPDATE users SET group_name = ?, organization = ?, group_members = ? WHERE id = ?',
+          [finalTeamName, finalTeamName, parsedTeam.formatted, dbUser.id]
+        );
       }
 
       const targetChallenge = await db.get('SELECT id, competition_type, is_active, is_open FROM challenges WHERE id = ?', [challenge_id]);
@@ -516,12 +620,12 @@ const server = http.createServer(async (req, res) => {
       `, [
         id,
         challenge_id,
-        authUser.id,
-        authUser.name,
+        dbUser.id,
+        dbUser.name,
         title.trim(),
         pitch.trim(),
-        team_name || authUser.name,
-        team_members || authUser.name,
+        finalTeamName,
+        parsedTeam.formatted,
         JSON.stringify(target_audience || {}),
         JSON.stringify(swot || {}),
         JSON.stringify(feasibility || {}),
@@ -534,7 +638,7 @@ const server = http.createServer(async (req, res) => {
       ]);
 
       return sendJSON(res, 201, {
-        message: 'Project and Feasibility study submitted directly to the database for Lajna review!',
+        message: '🔒 تم إرسال وحفظ دراسة المجموعة بنجاح في قاعدة البيانات لتحكيم اللجنة!',
         id,
         document_name
       });
@@ -549,8 +653,8 @@ const server = http.createServer(async (req, res) => {
       const isAdmin = authUser && authUser.role === 'admin';
 
       if (!isAdmin && !isApprovedLajna) {
-        return sendJSON(res, 403, { 
-          error: 'صلاحية غير مسموحة: حسابك كعضو لجنة تحكيم بانتظار اعتماد مدير المسابقة (Admin Approval Required).' 
+        return sendJSON(res, 403, {
+          error: 'صلاحية غير مسموحة: حسابك كعضو لجنة تحكيم بانتظار اعتماد مدير المسابقة (Admin Approval Required).'
         });
       }
 
@@ -668,34 +772,6 @@ const server = http.createServer(async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // API: Database Status & Engine Info
-    // -------------------------------------------------------------
-    if (pathname === '/api/db/status' && req.method === 'GET') {
-      const stats = {
-        users: (await db.get('SELECT COUNT(*) as count FROM users'))?.count || 0,
-        challenges: (await db.get('SELECT COUNT(*) as count FROM challenges'))?.count || 0,
-        submissions: (await db.get('SELECT COUNT(*) as count FROM submissions'))?.count || 0,
-        evaluations: (await db.get('SELECT COUNT(*) as count FROM evaluations'))?.count || 0
-      };
-
-      return sendJSON(res, 200, {
-        active_engine: db.isPostgres ? 'PostgreSQL (Active via DATABASE_URL)' : 'SQLite (Embedded Storage - PostgreSQL URL ready in .env)',
-        is_postgres: db.isPostgres,
-        postgres_url_set: !!process.env.DATABASE_URL,
-        counts: stats
-      });
-    }
-
-    if (pathname === '/api/db/export-postgres' && req.method === 'GET') {
-      const exportSQL = await exportToPostgresSQL();
-      res.writeHead(200, {
-        'Content-Type': 'application/sql; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="mlic_postgres_export.sql"'
-      });
-      return res.end(exportSQL);
-    }
-
-    // -------------------------------------------------------------
     // Static Files & Document Downloads Handling
     // -------------------------------------------------------------
     if (pathname.startsWith('/uploads/')) {
@@ -732,7 +808,7 @@ const server = http.createServer(async (req, res) => {
             res.writeHead(404, { 'Content-Type': 'text/plain' });
             return res.end('File not found');
           }
-          res.writeHead(200, { 
+          res.writeHead(200, {
             'Content-Type': 'text/html; charset=utf-8',
             'Cache-Control': 'no-cache, must-revalidate'
           });
@@ -749,7 +825,7 @@ const server = http.createServer(async (req, res) => {
           res.writeHead(500, { 'Content-Type': 'text/plain' });
           return res.end('Server Error reading file');
         }
-        res.writeHead(200, { 
+        res.writeHead(200, {
           'Content-Type': contentType,
           'Cache-Control': 'no-cache, must-revalidate'
         });

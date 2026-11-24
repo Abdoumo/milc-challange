@@ -90,6 +90,8 @@ async function initDatabase() {
       const schemaPath = path.join(__dirname, '..', 'database', 'init_postgres.sql');
       const schemaSql = fs.readFileSync(schemaPath, 'utf8');
       await pgPool.query(schemaSql);
+      await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS group_name VARCHAR(255) DEFAULT '';`);
+      await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS group_members TEXT DEFAULT '';`);
       await pgPool.query(`ALTER TABLE challenges ADD COLUMN IF NOT EXISTS competition_type VARCHAR(32) NOT NULL DEFAULT 'marketing_strategy';`);
       await pgPool.query(`ALTER TABLE challenges ADD COLUMN IF NOT EXISTS is_open INT NOT NULL DEFAULT 1;`);
       console.log('[Database] PostgreSQL tables and indexes verified successfully.');
@@ -106,6 +108,8 @@ async function initDatabase() {
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'participant',
         organization TEXT DEFAULT '',
+        group_name TEXT DEFAULT '',
+        group_members TEXT DEFAULT '',
         bio TEXT DEFAULT '',
         is_approved INTEGER DEFAULT 1,
         created_at TEXT NOT NULL
@@ -183,6 +187,15 @@ async function initDatabase() {
 
     // Safe SQLite column migrations for existing databases
     try {
+      const userCols = sqliteDb.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+      if (!userCols.includes('group_name')) {
+        sqliteDb.exec("ALTER TABLE users ADD COLUMN group_name TEXT DEFAULT ''");
+        console.log('[Database] Migrated users.group_name');
+      }
+      if (!userCols.includes('group_members')) {
+        sqliteDb.exec("ALTER TABLE users ADD COLUMN group_members TEXT DEFAULT ''");
+        console.log('[Database] Migrated users.group_members');
+      }
       const cols = sqliteDb.prepare('PRAGMA table_info(challenges)').all().map(c => c.name);
       if (!cols.includes('competition_type')) {
         sqliteDb.exec("ALTER TABLE challenges ADD COLUMN competition_type TEXT NOT NULL DEFAULT 'marketing_strategy'");
