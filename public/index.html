@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MLIC CHALLENGE - دراسات الجدوى ولجنة التحكيم</title>
-  <link rel="stylesheet" href="style.css?v=20261124_v6">
+  <link rel="stylesheet" href="style.css?v=20261124_v7">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -121,40 +121,40 @@
   <section class="hero">
     <div class="container hero-content">
       <div class="hero-pill">
-        <span>🏆 مسابقة MLIC CHALLENGE 2026</span>
+        <span>🏆 مسابقتان رسميتان • MLIC CHALLENGE 2026</span>
         <span class="hero-pill-sep">•</span>
         <span>تحكيم حصري من لجنة الخبراء</span>
       </div>
-      <h2>حوّل أفكار التحدي إلى دراسة جدوى متكاملة ومستند رسمي</h2>
+      <h2>مسابقتان للابتكار: استراتيجية تسويق متكاملة أو أفضل فكرة ضمن محور</h2>
       <p>
-        سجّل دخولك في مسابقة MLIC CHALLENGE، اختر من الأفكار المطروحة، أعد دراسة الجدوى ومصفوفة SWOT وحدد جمهورك وأرفق ملف المستند (PDF / Doc). دراستك سرية ومحفوظة مباشرة في قاعدة البيانات للمراجعة الحصرية من قِبل لجنة التحكيم (Lajna)!
+        شارك في <strong>المسابقة الأولى</strong> عبر تقديم أفضل استراتيجية تسويق ودراسة جدوى للأفكار المطروحة من الإدارة، أو شارك في <strong>المسابقة الثانية</strong> بابتكار أفضل فكرة مشروع ضمن المحور الذي تحدده الإدارة (مثل: الطبيعة والاستدامة...). جميع الدراسات سرية ومحفوظة مباشرة في قاعدة البيانات للجنة التحكيم (Lajna).
       </p>
 
       <div class="hero-actions">
-        <button class="btn btn-primary btn-lg" onclick="navigateTo('submit')">
-          ✍️ إعداد دراسة الجدوى وإرفاق المستند
+        <button class="btn btn-primary btn-lg" onclick="navigateTo('challenges')">
+          🏆 استعراض المسابقتين والمحاور
         </button>
-        <button class="btn btn-secondary btn-lg" onclick="navigateTo('leaderboard')">
-          🏆 استعراض منصة الفائزين (Lajna Podium)
+        <button class="btn btn-secondary btn-lg" onclick="navigateTo('submit')">
+          ✍️ تقديم دراسة أو فكرة الآن
         </button>
       </div>
 
       <div class="hero-stats">
         <div class="stat-item">
-          <div class="stat-value" id="hero-ideas-count">💡 3+</div>
-          <div class="stat-label">أفكار تحدي قابلة للتعديل</div>
+          <div class="stat-value" id="hero-ideas-count">🎯 المسابقة 1</div>
+          <div class="stat-label">فكرة مطروحة ← استراتيجية تسويق</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="hero-themes-count">🌿 المسابقة 2</div>
+          <div class="stat-label">محور الإدارة ← أفضل فكرة مشروع</div>
         </div>
         <div class="stat-item">
           <div class="stat-value">📄 Doc / PDF</div>
           <div class="stat-label">إرفاق المستندات متاح</div>
         </div>
         <div class="stat-item">
-          <div class="stat-value">🔒 DB Only</div>
-          <div class="stat-label">حفظ سري بقاعدة البيانات</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">⚖️ Lajna</div>
-          <div class="stat-label">تحكيم رسمي معتمد</div>
+          <div class="stat-value">⚖️ Lajna DB</div>
+          <div class="stat-label">حفظ سري وتحكيم رسمي</div>
         </div>
       </div>
     </div>
@@ -163,20 +163,30 @@
   <!-- Main Views Container -->
   <main class="main-view container">
 
-    <!-- 1. VIEW: CHALLENGES ("ill give the ideas") -->
+    <!-- 1. VIEW: COMPETITIONS & CHALLENGES -->
     <div id="view-challenges">
       <div class="section-header">
         <div>
-          <h2 class="section-title">💡 أفكار المشاريع والتحديات المطروحة</h2>
-          <p class="section-subtitle">الأفكار المعتمدة للمسابقة؛ اختر فكرة التحدي لبدء دراسة الجدوى وإرفاق مستندك</p>
+          <h2 class="section-title">🏆 المسابقتان والتحديات المطروحة</h2>
+          <p class="section-subtitle">اختر المسابقة التي تناسبك: قدّم أفضل استراتيجية تسويق لفكرة مطروحة، أو ابتكر أفضل فكرة في محور الإدارة</p>
         </div>
-        <!-- Admin Add/Edit Idea Button -->
-        <div id="admin-ideas-bar" style="display:none;">
-          <button class="btn btn-primary btn-sm" onclick="openAddIdeaModal()">
-            ➕ إضافة فكرة جديدة (Admin)
+        <!-- Admin Add/Edit Idea & Theme Buttons -->
+        <div id="admin-ideas-bar" class="admin-ideas-actions" style="display:none;">
+          <button class="btn btn-primary btn-sm" onclick="openAddIdeaModal('marketing_strategy')">
+            ➕ إضافة فكرة (المسابقة 1)
+          </button>
+          <button class="btn btn-lajna btn-sm" onclick="openAddIdeaModal('theme_idea')">
+            🌿 إضافة / تعيين محور (المسابقة 2)
           </button>
         </div>
       </div>
+
+      <!-- Two Competitions Overview Cards -->
+      <div class="competitions-overview-grid" id="competitions-overview-grid"></div>
+
+      <!-- Competition Filter Bar -->
+      <div class="competition-filter-bar" id="competition-filter-bar"></div>
+
       <div class="challenges-grid" id="challenges-grid-content">
         <!-- Rendered by app.js -->
       </div>
@@ -186,7 +196,7 @@
     <div id="view-submit" style="display:none;">
       <div class="section-header section-header-submit">
         <div>
-          <h2 class="section-title">🚀 إعداد دراسة الجدوى وإرفاق المستند <span class="title-tag-en">(Submission to DB)</span></h2>
+          <h2 class="section-title" id="submit-view-title">🚀 إعداد دراسة الجدوى وإرفاق المستند <span class="title-tag-en">(Submission to DB)</span></h2>
           <p class="section-subtitle confidential-subtitle">
             <span>🔒</span>
             <span>دراستك محمية وسرية: تُحفظ مباشرة في قاعدة البيانات للمراجعة الحصرية من قبل لجنة التحكيم فقط</span>
@@ -200,40 +210,51 @@
         </div>
         <div class="wizard-mobile-caption" id="wizard-mobile-caption"></div>
 
-        <!-- STEP 1: Project Identity -->
+        <!-- STEP 1: Competition Track & Project Identity -->
         <div id="wizard-step-1" class="wizard-pane">
-          <h3 class="wizard-pane-title">1. بيانات المشروع والفكرة</h3>
-          
+          <h3 class="wizard-pane-title" id="wiz-step1-heading">1. اختيار المسابقة وبيانات المشروع</h3>
+
+          <!-- Competition Type Switcher -->
           <div class="form-group">
-            <label class="form-label">فكرة التحدي المرتبطة *</label>
-            <select class="form-control" id="wizard-challenge-select">
-              <option value="">-- اختر الفكرة من التحديات المتاحة --</option>
-            </select>
+            <label class="form-label" id="wiz-label-comp-type">نوع المسابقة *</label>
+            <div class="wizard-comp-selector" id="wizard-comp-selector"></div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">اسم المشروع أو الشركة الناشئة *</label>
-            <input type="text" class="form-control" id="wiz-title" placeholder="مثال: SolarDrop للري الذكي">
-          </div>
+          <!-- Closed Theme Notice (shown when Competition 2 has no open theme yet) -->
+          <div id="wizard-comp2-closed-notice" style="display:none;"></div>
 
-          <div class="form-group">
-            <label class="form-label">الملخص الموجز للمشروع (Pitch) *</label>
-            <textarea class="form-control" id="wiz-pitch" placeholder="اشرح الحل في جملتين إلى ثلاث جمل واضحة توضح القيمة المضافة..."></textarea>
-          </div>
-
-          <div class="form-grid-2">
+          <div id="wizard-step1-fields">
             <div class="form-group">
-              <label class="form-label">اسم الفريق</label>
-              <input type="text" class="form-control" id="wiz-team-name" placeholder="مثال: فريق الابتكار الزراعي">
+              <label class="form-label" id="wiz-label-track">فكرة التحدي المرتبطة *</label>
+              <select class="form-control" id="wizard-challenge-select">
+                <option value="">-- اختر الفكرة من التحديات المتاحة --</option>
+              </select>
             </div>
-            <div class="form-group">
-              <label class="form-label">أسماء وتخصصات الأعضاء</label>
-              <input type="text" class="form-control" id="wiz-team-members" placeholder="سامي (هندسة زراعية)، سلمى (مالية)، عمر (برمجة)">
-            </div>
-          </div>
 
-          <div class="wizard-nav-actions wizard-nav-end">
-            <button class="btn btn-primary" onclick="setWizardStep(2)">التالي: دراسة الجمهور المستهدف ←</button>
+            <div class="form-group">
+              <label class="form-label" id="wiz-label-title">اسم المشروع أو خطة التسويق *</label>
+              <input type="text" class="form-control" id="wiz-title" placeholder="مثال: خطة إطلاق ونمو Omni AI للأسواق">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" id="wiz-label-pitch">الملخص الموجز للاستراتيجية / المشروع (Pitch) *</label>
+              <textarea class="form-control" id="wiz-pitch" placeholder="اشرح استراتيجيتك التسويقية أو فكرتك في جملتين إلى ثلاث جمل واضحة توضح القيمة المضافة..."></textarea>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">اسم الفريق</label>
+                <input type="text" class="form-control" id="wiz-team-name" placeholder="مثال: فريق الابتكار والنمو">
+              </div>
+              <div class="form-group">
+                <label class="form-label">أسماء وتخصصات الأعضاء</label>
+                <input type="text" class="form-control" id="wiz-team-members" placeholder="سامي (تسويق)، سلمى (مالية)، عمر (برمجة)">
+              </div>
+            </div>
+
+            <div class="wizard-nav-actions wizard-nav-end">
+              <button class="btn btn-primary" onclick="setWizardStep(2)">التالي: دراسة الجمهور المستهدف ←</button>
+            </div>
           </div>
         </div>
 
@@ -542,43 +563,61 @@
 
   </main>
 
-  <!-- MODAL: Add / Edit Idea ("ill give the ideas") -->
+  <!-- MODAL: Add / Edit Idea or Theme -->
   <div class="modal-overlay" id="idea-modal">
-    <div class="modal-content" style="max-width:600px;">
+    <div class="modal-content" style="max-width:620px;">
       <div class="modal-header">
-        <h3 id="modal-idea-heading">💡 إدارة فكرة التحدي للمسابقة</h3>
+        <h3 id="modal-idea-heading">💡 إدارة فكرة أو محور للمسابقة</h3>
         <button class="modal-close" onclick="closeModal('idea-modal')">×</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="modal-idea-id">
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">نوع المسابقة *</label>
+            <select class="form-control" id="modal-idea-type" onchange="updateIdeaModalLabels()">
+              <option value="marketing_strategy">🎯 المسابقة 1: فكرة مطروحة (لتقديم استراتيجية تسويق)</option>
+              <option value="theme_idea">🌿 المسابقة 2: محور عام (ليقدّم المتسابقون أفضل فكرة فيه)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">حالة المشاركة *</label>
+            <select class="form-control" id="modal-idea-is-open">
+              <option value="1">🟢 مفتوح للمشاركة الآن (Open)</option>
+              <option value="0">⏳ قريباً — بانتظار إعلان المحور (TBA)</option>
+            </select>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label class="form-label">عنوان فكرة المشروع / التحدي *</label>
-          <input type="text" class="form-control" id="modal-idea-title" placeholder="مثال: الفكرة 1: نظام التبريد الشمسي...">
+          <label class="form-label" id="modal-idea-label-title">عنوان فكرة المشروع / التحدي *</label>
+          <input type="text" class="form-control" id="modal-idea-title" placeholder="مثال: منظومة الأتمتة بالذكاء الاصطناعي...">
         </div>
         <div class="form-group">
-          <label class="form-label">التصنيف أو المجال</label>
-          <input type="text" class="form-control" id="modal-idea-category" placeholder="مثال: AgriTech, Clean Logistics...">
+          <label class="form-label" id="modal-idea-label-category">التصنيف أو المجال</label>
+          <input type="text" class="form-control" id="modal-idea-category" placeholder="مثال: AI, Nature & Sustainability...">
         </div>
         <div class="form-group">
-          <label class="form-label">نبذة ملخصة عن الفكرة</label>
-          <textarea class="form-control" id="modal-idea-summary" placeholder="شرح مبسط للفكرة..."></textarea>
+          <label class="form-label" id="modal-idea-label-summary">نبذة ملخصة</label>
+          <textarea class="form-control" id="modal-idea-summary" placeholder="شرح مبسط..."></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">المشكلة المطروحة والمطلوب حلها *</label>
-          <textarea class="form-control" id="modal-idea-problem" placeholder="صف المشكلة الحرجة التي يعاني منها المزارعون أو السوق..."></textarea>
+          <label class="form-label" id="modal-idea-label-problem">المشكلة المطروحة والمطلوب حلها *</label>
+          <textarea class="form-control" id="modal-idea-problem" placeholder="صف التحدي أو شروط المحور المطلوبة..."></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">المخرجات والمستندات المتوقعة في دراسة الجدوى</label>
-          <textarea class="form-control" id="modal-idea-outcomes" placeholder="1. دراسة جدوى فنية ومالية\n2. ملف مستند PDF..."></textarea>
+          <label class="form-label" id="modal-idea-label-outcomes">المخرجات والمستندات المتوقعة</label>
+          <textarea class="form-control" id="modal-idea-outcomes" placeholder="1. استراتيجية تسويق أو فكرة مبتكرة&#10;2. ملف مستند PDF..."></textarea>
         </div>
-        <div class="form-group">
-          <label class="form-label">المنحة أو الجائزة المرصودة للفكرة</label>
-          <input type="text" class="form-control" id="modal-idea-reward" placeholder="مثال: منحة 15,000$ + احتضان رسمي">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">المنحة أو الجائزة المرصودة</label>
+          <input type="text" class="form-control" id="modal-idea-reward" placeholder="مثال: جائزة المركز الأول + احتضان رسمي">
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('idea-modal')">إلغاء</button>
-        <button class="btn btn-primary" onclick="saveChallengeIdea()">💾 حفظ فكرة التحدي</button>
+        <button class="btn btn-primary" onclick="saveChallengeIdea()">💾 حفظ في قاعدة البيانات</button>
       </div>
     </div>
   </div>
@@ -680,6 +719,6 @@
     </div>
   </footer>
 
-  <script src="app.js?v=20261124_v6"></script>
+  <script src="app.js?v=20261124_v8"></script>
 </body>
 </html>

@@ -3042,3 +3042,251 @@ footer {
   font-size: 0.78rem;
   font-weight: 600;
 }
+
+/* ==============================================================
+   TWO COMPETITIONS OVERVIEW, FILTER CHIPS & TRACK SELECTOR
+   ============================================================== */
+.admin-ideas-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.competitions-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.comp-overview-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.comp-overview-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-light);
+}
+
+.comp-overview-1.selected {
+  border-color: rgba(16, 185, 129, 0.7);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), var(--bg-card));
+  box-shadow: 0 8px 24px -8px rgba(16, 185, 129, 0.25);
+}
+
+.comp-overview-2.selected {
+  border-color: rgba(139, 92, 246, 0.7);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), var(--bg-card));
+  box-shadow: 0 8px 24px -8px rgba(139, 92, 246, 0.28);
+}
+
+.comp-overview-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.comp-overview-card h3 {
+  font-size: clamp(1rem, 2vw, 1.18rem);
+  margin-bottom: 6px;
+}
+
+.comp-overview-card p {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.comp-pill {
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.comp-pill-1 {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.comp-pill-2 {
+  background: rgba(139, 92, 246, 0.2);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+}
+
+.comp-count-tag {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.comp-count-tag.tag-tba {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.competition-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.filter-chip {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  color: #ffffff;
+  border-color: var(--border-light);
+}
+
+.filter-chip.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(56, 189, 248, 0.18));
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #ffffff;
+}
+
+.comp-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.73rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.comp-badge-marketing {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.comp-badge-theme {
+  background: rgba(139, 92, 246, 0.2);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.status-open {
+  background: rgba(16, 185, 129, 0.14);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-tba {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.challenge-card-theme::before {
+  background: linear-gradient(90deg, #8b5cf6, #10b981);
+}
+
+.challenge-card-tba {
+  border-style: dashed;
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.wizard-comp-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.wiz-comp-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: start;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.wiz-comp-btn:hover {
+  border-color: var(--border-light);
+}
+
+.wiz-comp-btn.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(2, 132, 199, 0.15));
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.18);
+}
+
+.wiz-comp-btn-theme.active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(16, 185, 129, 0.14));
+  border-color: rgba(139, 92, 246, 0.65);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.22);
+}
+
+.wiz-comp-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.wiz-comp-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+  .competitions-overview-grid,
+  .wizard-comp-selector {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-ideas-actions,
+  .admin-ideas-actions .btn {
+    width: 100%;
+  }
+
+  .filter-chip {
+    font-size: 0.78rem;
+    padding: 6px 11px;
+  }
+}

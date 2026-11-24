@@ -13,6 +13,10 @@ const state = {
   isLajnaOrAdmin: false,
   wizardStep: 1,
   wizardChallengeId: null,
+  activeCompetitionFilter: 'all',
+  wizardCompetitionType: 'marketing_strategy',
+  lajnaCompetitionFilter: 'all',
+  leaderboardCompetitionTab: 'marketing_strategy',
   lang: localStorage.getItem('agrivers_lang') || 'ar',
 
   // Current uploaded document draft
@@ -207,11 +211,70 @@ function setWizardStep(step) {
   }
 }
 
+function getCompetitionMeta(type) {
+  const isTheme = type === 'theme_idea';
+  if (isTheme) {
+    return {
+      type: 'theme_idea',
+      cssClass: 'comp-badge-theme',
+      shortLabel: state.lang === 'ar' ? '🌿 المسابقة 2 • أفضل فكرة في المحور' : '🌿 Comp 2 • Theme Idea',
+      title: state.lang === 'ar' ? 'المسابقة 2: أفضل فكرة مشروع ضمن محور' : 'Competition 2: Best Idea in Theme',
+      desc: state.lang === 'ar'
+        ? 'تطرح الإدارة محوراً عاماً (مثل: الطبيعة...)، ويتنافس المشاركون على ابتكار أفضل فكرة مشروع أصلية تخدم هذا المحور.'
+        : 'Admin provides a theme (e.g. Nature...), and participants pitch the best original project idea for that theme.'
+    };
+  }
+  return {
+    type: 'marketing_strategy',
+    cssClass: 'comp-badge-marketing',
+    shortLabel: state.lang === 'ar' ? '🎯 المسابقة 1 • استراتيجية تسويق' : '🎯 Comp 1 • Marketing Strategy',
+    title: state.lang === 'ar' ? 'المسابقة 1: أفضل استراتيجية تسويق ودراسة جدوى' : 'Competition 1: Best Marketing Strategy & Study',
+    desc: state.lang === 'ar'
+      ? 'تطرح الإدارة فكرة مشروع متكاملة، ويتنافس المشاركون على تقديم أفضل استراتيجية تسويق ودراسة جدوى لإنجاحها.'
+      : 'Admin provides an idea, and participants submit the strongest marketing strategy and feasibility study.'
+  };
+}
+
+function setCompetitionFilter(type) {
+  state.activeCompetitionFilter = type;
+  renderChallengesView();
+}
+
+function selectWizardCompetition(type) {
+  state.wizardCompetitionType = type === 'theme_idea' ? 'theme_idea' : 'marketing_strategy';
+  const current = state.challenges.find(c => c.id === state.wizardChallengeId);
+  if (current && current.competition_type !== state.wizardCompetitionType) {
+    state.wizardChallengeId = null;
+  }
+  renderSubmissionWizard();
+}
+
+function setLajnaFilter(type) {
+  state.lajnaCompetitionFilter = type;
+  renderLajnaView();
+}
+
+function setLeaderboardCompetition(type) {
+  state.leaderboardCompetitionTab = type === 'theme_idea' ? 'theme_idea' : 'marketing_strategy';
+  renderLeaderboardView();
+}
+
 function selectChallengeForSubmission(challengeId) {
+  const ch = state.challenges.find(c => c.id === challengeId);
+  if (ch && ch.is_open === 0) {
+    showToast(state.lang === 'ar' ? '⏳ محور المسابقة الثانية بانتظار الإعلان الرسمي من الإدارة قريباً.' : '⏳ This theme is coming soon once announced by Admin.', 'info');
+    return;
+  }
+  state.wizardCompetitionType = ch?.competition_type || 'marketing_strategy';
   state.wizardChallengeId = challengeId;
   state.wizardStep = 1;
   navigateTo('submit');
-  showToast('Challenge selected! Complete your proposal and attach your document below.', 'success');
+  showToast(
+    state.wizardCompetitionType === 'theme_idea'
+      ? (state.lang === 'ar' ? 'تم اختيار المحور! اكتب فكرتك المبتكرة وأكمل الدراسة أدناه.' : 'Theme selected! Submit your best idea below.')
+      : (state.lang === 'ar' ? 'تم اختيار الفكرة! قدّم استراتيجية التسويق ودراسة الجدوى أدناه.' : 'Challenge selected! Complete your marketing strategy and feasibility study below.'),
+    'success'
+  );
 }
 
 // SWOT Helpers
@@ -337,7 +400,7 @@ async function postProposal() {
     return;
   }
 
-  const challengeId = state.wizardChallengeId || document.getElementById('wizard-challenge-select')?.value;
+  const challengeId = document.getElementById('wizard-challenge-select')?.value || state.wizardChallengeId;
   const title = document.getElementById('wiz-title')?.value.trim();
   const pitch = document.getElementById('wiz-pitch')?.value.trim();
   const teamName = document.getElementById('wiz-team-name')?.value.trim();
@@ -496,9 +559,39 @@ async function toggleWinnersAnnouncement() {
   }
 }
 
-// Add or Edit Challenge Idea ("ill give the ideas")
+// Add or Edit Challenge Idea or Competition 2 Theme
+function updateIdeaModalLabels() {
+  const type = document.getElementById('modal-idea-type')?.value || 'marketing_strategy';
+  const isTheme = type === 'theme_idea';
+  const isAr = state.lang === 'ar';
+
+  const lblTitle = document.getElementById('modal-idea-label-title');
+  const lblCat = document.getElementById('modal-idea-label-category');
+  const lblSum = document.getElementById('modal-idea-label-summary');
+  const lblProb = document.getElementById('modal-idea-label-problem');
+  const lblOut = document.getElementById('modal-idea-label-outcomes');
+
+  if (lblTitle) lblTitle.textContent = isTheme
+    ? (isAr ? 'اسم المحور الرسمي (Theme) *' : 'Theme Title (e.g. Nature & Sustainability) *')
+    : (isAr ? 'عنوان فكرة المشروع / التحدي *' : 'Challenge Idea Title *');
+  if (lblCat) lblCat.textContent = isTheme
+    ? (isAr ? 'مجال المحور أو وسومه' : 'Theme Category / Domain')
+    : (isAr ? 'التصنيف أو المجال' : 'Category / Sector');
+  if (lblSum) lblSum.textContent = isTheme
+    ? (isAr ? 'نبذة عن محور المسابقة الثانية' : 'Theme Overview')
+    : (isAr ? 'نبذة ملخصة عن الفكرة' : 'Idea Summary');
+  if (lblProb) lblProb.textContent = isTheme
+    ? (isAr ? 'وصف المحور ومتطلبات الأفكار المقبولة *' : 'Theme Description & Guidelines *')
+    : (isAr ? 'المشكلة المطروحة والمطلوب حلها *' : 'Problem Statement & Marketing Challenge *');
+  if (lblOut) lblOut.textContent = isTheme
+    ? (isAr ? 'معايير التقييم والمستندات المطلوبة' : 'Expected Deliverables & Doc')
+    : (isAr ? 'مخرجات استراتيجية التسويق والجدوى المطلوبة' : 'Expected Marketing Strategy & Deliverables');
+}
+
 async function saveChallengeIdea() {
   const id = document.getElementById('modal-idea-id')?.value;
+  const competition_type = document.getElementById('modal-idea-type')?.value || 'marketing_strategy';
+  const is_open = parseInt(document.getElementById('modal-idea-is-open')?.value ?? '1', 10);
   const title = document.getElementById('modal-idea-title')?.value.trim();
   const category = document.getElementById('modal-idea-category')?.value.trim();
   const summary = document.getElementById('modal-idea-summary')?.value.trim();
@@ -507,13 +600,15 @@ async function saveChallengeIdea() {
   const reward = document.getElementById('modal-idea-reward')?.value.trim();
 
   if (!title || !problem) {
-    showToast('Title and Problem Statement are required', 'error');
+    showToast(state.lang === 'ar' ? 'العنوان والوصف مطلوبان' : 'Title and Description are required', 'error');
     return;
   }
 
   const payload = {
+    competition_type,
+    is_open,
     title,
-    category: category || 'AgriTech Innovation',
+    category: category || (competition_type === 'theme_idea' ? 'Theme Challenge' : 'Marketing Strategy'),
     summary,
     problem_statement: problem,
     expected_outcomes: outcomes,
@@ -523,10 +618,10 @@ async function saveChallengeIdea() {
   try {
     if (id) {
       await api(`/api/challenges/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
-      showToast('✓ Challenge Idea updated!', 'success');
+      showToast(competition_type === 'theme_idea' ? '✓ تم تحديث محور المسابقة الثانية بنجاح!' : '✓ تم تحديث فكرة المسابقة الأولى!', 'success');
     } else {
       await api('/api/challenges', { method: 'POST', body: JSON.stringify(payload) });
-      showToast('✓ New Challenge Idea added!', 'success');
+      showToast(competition_type === 'theme_idea' ? '✓ تم إضافة محور جديد للمسابقة الثانية!' : '✓ تم إضافة فكرة جديدة للمسابقة الأولى!', 'success');
     }
     closeModal('idea-modal');
     await loadInitialData();
@@ -536,15 +631,21 @@ async function saveChallengeIdea() {
   }
 }
 
-function openAddIdeaModal() {
+function openAddIdeaModal(defaultType = 'marketing_strategy') {
+  const compType = defaultType === 'theme_idea' ? 'theme_idea' : 'marketing_strategy';
   document.getElementById('modal-idea-id').value = '';
+  document.getElementById('modal-idea-type').value = compType;
+  document.getElementById('modal-idea-is-open').value = '1';
   document.getElementById('modal-idea-title').value = '';
   document.getElementById('modal-idea-category').value = '';
   document.getElementById('modal-idea-summary').value = '';
   document.getElementById('modal-idea-problem').value = '';
   document.getElementById('modal-idea-outcomes').value = '';
   document.getElementById('modal-idea-reward').value = '';
-  document.getElementById('modal-idea-heading').textContent = state.lang === 'ar' ? '💡 إضافة فكرة جديدة للمسابقة' : 'Add New Competition Idea';
+  document.getElementById('modal-idea-heading').textContent = compType === 'theme_idea'
+    ? (state.lang === 'ar' ? '🌿 إضافة محور جديد (المسابقة الثانية)' : 'Add Competition 2 Theme')
+    : (state.lang === 'ar' ? '🎯 إضافة فكرة جديدة (المسابقة الأولى)' : 'Add Competition 1 Idea');
+  updateIdeaModalLabels();
   openModal('idea-modal');
 }
 
@@ -552,14 +653,20 @@ function openEditIdeaModal(challengeId) {
   const ch = state.challenges.find(c => c.id === challengeId);
   if (!ch) return;
 
+  const compType = ch.competition_type === 'theme_idea' ? 'theme_idea' : 'marketing_strategy';
   document.getElementById('modal-idea-id').value = ch.id;
+  document.getElementById('modal-idea-type').value = compType;
+  document.getElementById('modal-idea-is-open').value = ch.is_open === 0 ? '0' : '1';
   document.getElementById('modal-idea-title').value = ch.title;
   document.getElementById('modal-idea-category').value = ch.category;
   document.getElementById('modal-idea-summary').value = ch.summary;
   document.getElementById('modal-idea-problem').value = ch.problem_statement;
   document.getElementById('modal-idea-outcomes').value = ch.expected_outcomes;
   document.getElementById('modal-idea-reward').value = ch.reward_or_grant;
-  document.getElementById('modal-idea-heading').textContent = state.lang === 'ar' ? '✏️ تعديل بيانات فكرة التحدي' : 'Edit Challenge Idea';
+  document.getElementById('modal-idea-heading').textContent = compType === 'theme_idea'
+    ? (state.lang === 'ar' ? '🌿 تعديل / تعيين محور المسابقة الثانية' : 'Edit Competition 2 Theme')
+    : (state.lang === 'ar' ? '✏️ تعديل فكرة المسابقة الأولى' : 'Edit Competition 1 Idea');
+  updateIdeaModalLabels();
   openModal('idea-modal');
 }
 
@@ -634,9 +741,9 @@ function renderNavbar() {
 
   // Update Nav Labels for Language
   const navLabels = {
-    'challenges': state.lang === 'ar' ? 'الأفكار المطروحة' : 'Challenges',
-    'submit': state.lang === 'ar' ? 'تقديم دراسة' : 'Submit Study',
-    'my-sub': state.lang === 'ar' ? 'دراستي' : 'My Proposal',
+    'challenges': state.lang === 'ar' ? 'المسابقتان' : 'Competitions',
+    'submit': state.lang === 'ar' ? 'تقديم دراسة' : 'Submit Entry',
+    'my-sub': state.lang === 'ar' ? 'مشاركاتي' : 'My Entries',
     'lajna': state.lang === 'ar' ? 'لجنة التحكيم' : 'Jury Suite',
     'leaderboard': state.lang === 'ar' ? 'الفائزون' : 'Leaderboard',
     'admin-approvals': state.lang === 'ar' ? 'اعتماد المحكمين' : 'Approvals'
@@ -764,75 +871,154 @@ function renderNavbar() {
   }
 }
 
-// 1. Challenges View ("ill give the ideas")
+// 1. Competitions & Challenges View (Competition 1 Ideas + Competition 2 Themes)
 function renderChallengesView() {
   const grid = document.getElementById('challenges-grid-content');
+  const overviewGrid = document.getElementById('competitions-overview-grid');
+  const filterBar = document.getElementById('competition-filter-bar');
   const adminBar = document.getElementById('admin-ideas-bar');
+
+  const comp1List = state.challenges.filter(c => (c.competition_type || 'marketing_strategy') === 'marketing_strategy');
+  const comp2List = state.challenges.filter(c => c.competition_type === 'theme_idea');
+  const comp2OpenCount = comp2List.filter(c => c.is_open !== 0).length;
+
   const heroIdeasEl = document.getElementById('hero-ideas-count');
-  if (heroIdeasEl && state.challenges.length > 0) {
-    heroIdeasEl.textContent = `💡 ${state.challenges.length}`;
-  }
+  const heroThemesEl = document.getElementById('hero-themes-count');
+  if (heroIdeasEl) heroIdeasEl.textContent = `🎯 ${comp1List.length} ${state.lang === 'ar' ? 'أفكار' : 'Ideas'}`;
+  if (heroThemesEl) heroThemesEl.textContent = comp2OpenCount > 0 ? `🌿 ${comp2OpenCount} ${state.lang === 'ar' ? 'محور متاح' : 'Themes'}` : (state.lang === 'ar' ? '🌿 قريباً' : '🌿 Soon');
+
   if (!grid) return;
 
   if (adminBar) {
     adminBar.style.display = (state.currentUser?.role === 'admin' || state.currentUser?.role === 'lajna') ? 'flex' : 'none';
   }
 
-  grid.innerHTML = state.challenges.map((c, idx) => `
-    <div class="challenge-card">
+  if (overviewGrid) {
+    overviewGrid.innerHTML = `
+      <div class="comp-overview-card comp-overview-1 ${state.activeCompetitionFilter === 'marketing_strategy' ? 'selected' : ''}" onclick="setCompetitionFilter('${state.activeCompetitionFilter === 'marketing_strategy' ? 'all' : 'marketing_strategy'}')">
+        <div class="comp-overview-top">
+          <span class="comp-pill comp-pill-1">🎯 ${state.lang === 'ar' ? 'المسابقة الأولى' : 'Competition 1'}</span>
+          <span class="comp-count-tag">${comp1List.length} ${state.lang === 'ar' ? 'أفكار مطروحة' : 'Ideas'}</span>
+        </div>
+        <h3>${state.lang === 'ar' ? 'أفضل استراتيجية تسويق ودراسة جدوى' : 'Best Marketing Strategy & Feasibility'}</h3>
+        <p>${state.lang === 'ar' ? 'نطرح لكم فكرة المشروع، وتتنافسون على تقديم أقوى خطة تسويق ونموذج ربحي ودراسة جدوى لتحويلها لنجاح حقيقي.' : 'We offer the core project idea, and you compete to craft the winning marketing strategy and feasibility study.'}</p>
+      </div>
+
+      <div class="comp-overview-card comp-overview-2 ${state.activeCompetitionFilter === 'theme_idea' ? 'selected' : ''}" onclick="setCompetitionFilter('${state.activeCompetitionFilter === 'theme_idea' ? 'all' : 'theme_idea'}')">
+        <div class="comp-overview-top">
+          <span class="comp-pill comp-pill-2">🌿 ${state.lang === 'ar' ? 'المسابقة الثانية' : 'Competition 2'}</span>
+          <span class="comp-count-tag ${comp2OpenCount === 0 ? 'tag-tba' : ''}">
+            ${comp2OpenCount > 0 ? `${comp2OpenCount} ${state.lang === 'ar' ? 'محور مفتوح' : 'Open'}` : (state.lang === 'ar' ? '⏳ المحور قريباً' : '⏳ Theme TBA')}
+          </span>
+        </div>
+        <h3>${state.lang === 'ar' ? 'أفضل فكرة مشروع ضمن محور الإدارة' : 'Best Original Idea in Admin Theme'}</h3>
+        <p>${state.lang === 'ar' ? 'تحدّد الإدارة محوراً عاماً (مثل: الطبيعة والاستدامة...)، وتبتكرون أفضل فكرة مشروع تخدم هذا المحور.' : 'Admin announces a general theme (e.g. Nature & Sustainability...), and you pitch your best original idea within it.'}</p>
+      </div>
+    `;
+  }
+
+  if (filterBar) {
+    filterBar.innerHTML = `
+      <button type="button" class="filter-chip ${state.activeCompetitionFilter === 'all' ? 'active' : ''}" onclick="setCompetitionFilter('all')">
+        ${state.lang === 'ar' ? 'عرض المسابقتين' : 'All Competitions'} (${state.challenges.length})
+      </button>
+      <button type="button" class="filter-chip ${state.activeCompetitionFilter === 'marketing_strategy' ? 'active' : ''}" onclick="setCompetitionFilter('marketing_strategy')">
+        🎯 ${state.lang === 'ar' ? 'المسابقة 1: استراتيجية التسويق' : 'Comp 1: Marketing Strategy'} (${comp1List.length})
+      </button>
+      <button type="button" class="filter-chip ${state.activeCompetitionFilter === 'theme_idea' ? 'active' : ''}" onclick="setCompetitionFilter('theme_idea')">
+        🌿 ${state.lang === 'ar' ? 'المسابقة 2: أفكار المحاور' : 'Comp 2: Theme Ideas'} (${comp2List.length})
+      </button>
+    `;
+  }
+
+  const visibleChallenges = state.challenges.filter(c => {
+    const cType = c.competition_type || 'marketing_strategy';
+    if (state.activeCompetitionFilter === 'all') return true;
+    return cType === state.activeCompetitionFilter;
+  });
+
+  grid.innerHTML = visibleChallenges.map((c) => {
+    const isTheme = c.competition_type === 'theme_idea';
+    const isOpen = c.is_open !== 0;
+    const isAdminOrLajna = state.currentUser?.role === 'admin' || state.currentUser?.role === 'lajna';
+    const meta = getCompetitionMeta(c.competition_type);
+
+    return `
+    <div class="challenge-card ${isTheme ? 'challenge-card-theme' : ''} ${!isOpen ? 'challenge-card-tba' : ''}">
       <div>
         <div class="challenge-card-top">
-          <div class="challenge-badge">
-            <span>💡 ${state.lang === 'ar' ? `فكرة التحدي ${idx + 1}` : `Challenge Idea ${idx + 1}`}</span> • ${c.category}
+          <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+            <span class="comp-type-badge ${meta.cssClass}">${meta.shortLabel}</span>
+            <span class="status-pill ${isOpen ? 'status-open' : 'status-tba'}">
+              ${isOpen ? (state.lang === 'ar' ? '🟢 مفتوح للتقديم' : '🟢 Open') : (state.lang === 'ar' ? '⏳ سيتم تحديد المحور لاحقاً' : '⏳ Theme TBA')}
+            </span>
           </div>
-          ${(state.currentUser?.role === 'admin' || state.currentUser?.role === 'lajna') ? `
-            <button class="btn btn-outline btn-sm" onclick="openEditIdeaModal('${c.id}')" title="تعديل فكرة التحدي">
-              ✏️ ${state.lang === 'ar' ? 'تعديل الفكرة' : 'Edit'}
+          ${isAdminOrLajna ? `
+            <button class="btn btn-outline btn-sm" onclick="openEditIdeaModal('${c.id}')" title="تعديل">
+              ✏️ ${!isOpen && isTheme ? (state.lang === 'ar' ? 'تعيين وفتح المحور' : 'Set & Open Theme') : (state.lang === 'ar' ? 'تعديل' : 'Edit')}
             </button>
           ` : ''}
+        </div>
+
+        <div class="challenge-badge" style="margin-bottom:10px;">
+          <span>${isTheme ? '🌿' : '💡'} ${c.category}</span>
         </div>
 
         <h3 class="challenge-title">${c.title}</h3>
         <p class="challenge-summary">${c.summary}</p>
 
         <div class="challenge-details-box">
-          <strong>⚠️ ${state.lang === 'ar' ? 'المشكلة المطروحة والمطلوب حلها:' : 'The Problem Statement:'}</strong>
-          ${c.problem_statement}
+          <strong>${isTheme ? (state.lang === 'ar' ? '🌿 تفاصيل المحور والمطلوب من الأفكار:' : 'Theme Details & Guidelines:') : (state.lang === 'ar' ? '⚠️ المشكلة المطروحة والمطلوب تسويقه:' : 'The Problem & Marketing Challenge:')}</strong>
+          <div style="white-space:pre-line;">${c.problem_statement}</div>
         </div>
 
         <div class="challenge-details-box">
-          <strong>🎯 ${state.lang === 'ar' ? 'مخرجات دراسة الجدوى وسوات والمستند المطلوب:' : 'Expected Deliverables & Doc:'}</strong>
+          <strong>🎯 ${state.lang === 'ar' ? 'المخرجات والمستند المطلوب:' : 'Expected Deliverables & Doc:'}</strong>
           <div style="white-space:pre-line;">${c.expected_outcomes}</div>
         </div>
-
-        ${c.reward_or_grant ? `
-          <div class="challenge-reward">
-            🏆 ${c.reward_or_grant}
-          </div>
-        ` : ''}
       </div>
 
       <div class="challenge-footer">
         <span class="privacy-badge">
           🔒 ${state.lang === 'ar' ? 'التقديم سري ويذهب للجنة فقط' : 'Private to Lajna DB'}
         </span>
-        <button class="btn btn-primary btn-sm" onclick="selectChallengeForSubmission('${c.id}')">
-          🚀 ${state.lang === 'ar' ? 'تقديم دراسة الجدوى لهذا التحدي' : 'Apply & Submit Study'}
-        </button>
+        ${isOpen ? `
+          <button class="btn ${isTheme ? 'btn-lajna' : 'btn-primary'} btn-sm" onclick="selectChallengeForSubmission('${c.id}')">
+            🚀 ${isTheme
+              ? (state.lang === 'ar' ? 'قدّم فكرتك في هذا المحور' : 'Pitch Your Idea in Theme')
+              : (state.lang === 'ar' ? 'قدّم استراتيجية التسويق والجدوى' : 'Submit Marketing Strategy')}
+          </button>
+        ` : `
+          <button class="btn btn-secondary btn-sm" disabled style="opacity:0.7; cursor:not-allowed;">
+            ⏳ ${state.lang === 'ar' ? 'بانتظار تحديد المحور من الإدارة' : 'Awaiting Theme Announcement'}
+          </button>
+        `}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 // 2. Submission Wizard
 function renderSubmissionWizard() {
-  const steps = [
-    { step: 1, label: state.lang === 'ar' ? 'بيانات المشروع' : 'Project Info' },
-    { step: 2, label: state.lang === 'ar' ? 'الجمهور المستهدف' : 'Target Audience' },
-    { step: 3, label: state.lang === 'ar' ? 'تحليل SWOT' : 'SWOT Matrix' },
-    { step: 4, label: state.lang === 'ar' ? 'دراسة الجدوى' : 'Feasibility' },
-    { step: 5, label: state.lang === 'ar' ? 'المستند والإرسال' : 'Doc & Submit' }
-  ];
+  const isTheme = state.wizardCompetitionType === 'theme_idea';
+  const isAr = state.lang === 'ar';
+
+  const steps = isTheme
+    ? [
+        { step: 1, label: isAr ? 'فكرتك في المحور' : 'Your Idea' },
+        { step: 2, label: isAr ? 'الجمهور والأثر' : 'Audience & Impact' },
+        { step: 3, label: isAr ? 'تحليل SWOT' : 'SWOT Matrix' },
+        { step: 4, label: isAr ? 'دراسة الجدوى' : 'Feasibility' },
+        { step: 5, label: isAr ? 'المستند والإرسال' : 'Doc & Submit' }
+      ]
+    : [
+        { step: 1, label: isAr ? 'استراتيجية التسويق' : 'Strategy Info' },
+        { step: 2, label: isAr ? 'الجمهور المستهدف' : 'Target Audience' },
+        { step: 3, label: isAr ? 'تحليل SWOT' : 'SWOT Matrix' },
+        { step: 4, label: isAr ? 'الخطة والجدوى' : 'Marketing & Finance' },
+        { step: 5, label: isAr ? 'المستند والإرسال' : 'Doc & Submit' }
+      ];
 
   const stepsEl = document.getElementById('wizard-steps-container');
   if (stepsEl) {
@@ -848,7 +1034,7 @@ function renderSubmissionWizard() {
   if (captionEl) {
     const activeObj = steps.find(s => s.step === state.wizardStep) || steps[0];
     captionEl.innerHTML = `
-      <span class="wizard-mobile-step-pill">${state.lang === 'ar' ? `الخطوة ${activeObj.step} من 5` : `Step ${activeObj.step} of 5`}</span>
+      <span class="wizard-mobile-step-pill">${isAr ? `الخطوة ${activeObj.step} من 5` : `Step ${activeObj.step} of 5`}</span>
       <span class="wizard-mobile-step-title">${activeObj.label}</span>
     `;
   }
@@ -858,11 +1044,105 @@ function renderSubmissionWizard() {
     if (el) el.style.display = state.wizardStep === i ? 'block' : 'none';
   }
 
-  const select = document.getElementById('wizard-challenge-select');
-  if (select && select.options.length <= 1) {
-    select.innerHTML = `<option value="">-- ${state.lang === 'ar' ? 'اختر فكرة التحدي' : 'Select Challenge'} --</option>` +
-      state.challenges.map(c => `<option value="${c.id}" ${state.wizardChallengeId === c.id ? 'selected' : ''}>${c.title}</option>`).join('');
+  // Render Competition Selector in Step 1
+  const compSelectorEl = document.getElementById('wizard-comp-selector');
+  if (compSelectorEl) {
+    compSelectorEl.innerHTML = `
+      <button type="button" class="wiz-comp-btn ${!isTheme ? 'active' : ''}" onclick="selectWizardCompetition('marketing_strategy')">
+        <span class="wiz-comp-title">🎯 ${isAr ? 'المسابقة 1: استراتيجية تسويق' : 'Competition 1: Marketing Strategy'}</span>
+        <span class="wiz-comp-sub">${isAr ? 'اختر فكرة مطروحة وقدّم أفضل استراتيجية تسويق وجدوى' : 'Pick an offered idea & submit the best marketing strategy'}</span>
+      </button>
+      <button type="button" class="wiz-comp-btn wiz-comp-btn-theme ${isTheme ? 'active' : ''}" onclick="selectWizardCompetition('theme_idea')">
+        <span class="wiz-comp-title">🌿 ${isAr ? 'المسابقة 2: فكرة ضمن محور' : 'Competition 2: Theme Idea'}</span>
+        <span class="wiz-comp-sub">${isAr ? 'قدّم أفضل فكرة مشروع مبتكرة ضمن المحور الذي تحدده الإدارة' : 'Pitch your best original idea in the Admin theme'}</span>
+      </button>
+    `;
   }
+
+  // Filter open challenges by selected competition type
+  const openTracks = state.challenges.filter(c =>
+    (c.competition_type || 'marketing_strategy') === state.wizardCompetitionType && c.is_open !== 0
+  );
+
+  const closedNoticeEl = document.getElementById('wizard-comp2-closed-notice');
+  const fieldsWrapper = document.getElementById('wizard-step1-fields');
+  const isAdminOrLajna = state.currentUser?.role === 'admin' || state.currentUser?.role === 'lajna';
+
+  if (openTracks.length === 0) {
+    if (fieldsWrapper) fieldsWrapper.style.display = 'none';
+    if (closedNoticeEl) {
+      closedNoticeEl.style.display = 'block';
+      closedNoticeEl.innerHTML = `
+        <div class="empty-state-card" style="border-color:rgba(139,92,246,0.35); margin-top:12px;">
+          <div style="font-size:2.6rem; margin-bottom:10px;">⏳</div>
+          <h3>${isAr ? 'محور المسابقة الثانية قيد الإعداد من الإدارة' : 'Competition 2 Theme Coming Soon'}</h3>
+          <p style="color:var(--text-muted); max-width:500px; margin:10px auto 18px auto; font-size:0.92rem;">
+            ${isAr
+              ? 'ستقوم الإدارة بنشر المحور الرسمي قريباً (مثل: الطبيعة والاستدامة أو محور آخر). يمكنك حالياً المشاركة في المسابقة الأولى أو العودة فور فتح المحور.'
+              : 'Admin will announce the official theme soon (e.g. Nature & Sustainability). You can submit to Competition 1 now or check back once the theme opens.'}
+          </p>
+          <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="selectWizardCompetition('marketing_strategy')">
+              🎯 ${isAr ? 'الانتقال للمسابقة 1 (استراتيجية التسويق)' : 'Switch to Competition 1'}
+            </button>
+            ${isAdminOrLajna ? `
+              <button type="button" class="btn btn-lajna btn-sm" onclick="openAddIdeaModal('theme_idea')">
+                🌿 ${isAr ? 'إضافة وفتح محور الآن (Admin)' : 'Add & Open Theme Now'}
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+  } else {
+    if (closedNoticeEl) closedNoticeEl.style.display = 'none';
+    if (fieldsWrapper) fieldsWrapper.style.display = 'block';
+
+    // Always sync select options with selected competition tracks
+    const select = document.getElementById('wizard-challenge-select');
+    if (select) {
+      const currentVal = state.wizardChallengeId || select.value;
+      const defaultOpt = isTheme
+        ? (isAr ? '-- اختر المحور المتاح --' : '-- Select Open Theme --')
+        : (isAr ? '-- اختر الفكرة من التحديات المتاحة --' : '-- Select Offered Idea --');
+      select.innerHTML = `<option value="">${defaultOpt}</option>` +
+        openTracks.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+      if (openTracks.some(c => c.id === currentVal)) {
+        select.value = currentVal;
+        state.wizardChallengeId = currentVal;
+      } else if (openTracks.length === 1) {
+        select.value = openTracks[0].id;
+        state.wizardChallengeId = openTracks[0].id;
+      }
+    }
+  }
+
+  // Adapt Step 1 headings & placeholders dynamically
+  const step1Heading = document.getElementById('wiz-step1-heading');
+  const lblTrack = document.getElementById('wiz-label-track');
+  const lblTitle = document.getElementById('wiz-label-title');
+  const lblPitch = document.getElementById('wiz-label-pitch');
+  const inputTitle = document.getElementById('wiz-title');
+  const inputPitch = document.getElementById('wiz-pitch');
+
+  if (step1Heading) step1Heading.textContent = isTheme
+    ? (isAr ? '1. اختيار المحور وبيانات فكرتك المبتكرة' : '1. Select Theme & Pitch Your Idea')
+    : (isAr ? '1. اختيار الفكرة وملخص استراتيجية التسويق' : '1. Select Idea & Marketing Strategy');
+  if (lblTrack) lblTrack.textContent = isTheme
+    ? (isAr ? 'محور المسابقة الثانية (Theme) *' : 'Competition Theme *')
+    : (isAr ? 'فكرة التحدي المطروحة (المسابقة 1) *' : 'Offered Challenge Idea (Comp 1) *');
+  if (lblTitle) lblTitle.textContent = isTheme
+    ? (isAr ? 'عنوان فكرتك المبتكرة *' : 'Your Original Idea Title *')
+    : (isAr ? 'عنوان خطة التسويق / المشروع *' : 'Marketing Plan / Project Title *');
+  if (lblPitch) lblPitch.textContent = isTheme
+    ? (isAr ? 'شرح فكرتك والمشكلة التي تحلها ضمن المحور *' : 'Describe Your Idea & How It Fits the Theme *')
+    : (isAr ? 'الملخص التنفيذي لاستراتيجية التسويق والجدوى *' : 'Executive Summary of Marketing Strategy *');
+  if (inputTitle) inputTitle.placeholder = isTheme
+    ? (isAr ? 'مثال: EcoGuard — منصة ذكية لحماية الغابات...' : 'e.g. EcoGuard Smart Forest Monitoring')
+    : (isAr ? 'مثال: خطة إطلاق وتوسيع Omni AI للشركات' : 'e.g. Go-to-Market Growth Plan for Omni AI');
+  if (inputPitch) inputPitch.placeholder = isTheme
+    ? (isAr ? 'اشرح فكرتك الإبداعية وكيف تخدم المحور المحدد والقيمة المضافة...' : 'Explain your original idea, the problem it solves in this theme, and its value...')
+    : (isAr ? 'اشرح استراتيجيتك التسويقية للوصول للعملاء، التموضع، وخطة النمو...' : 'Explain your marketing strategy, positioning, acquisition channels, and growth plan...');
 
   if (state.wizardStep === 3) renderSwotMatrix();
   if (state.wizardStep === 4) updateFinancialCalc();
@@ -892,7 +1172,7 @@ function renderWizardReview() {
   const container = document.getElementById('wizard-review-summary');
   if (!container) return;
 
-  const challengeId = state.wizardChallengeId || document.getElementById('wizard-challenge-select')?.value;
+  const challengeId = document.getElementById('wizard-challenge-select')?.value || state.wizardChallengeId;
   const challenge = state.challenges.find(c => c.id === challengeId);
   const title = document.getElementById('wiz-title')?.value || state.form.title;
   const pitch = document.getElementById('wiz-pitch')?.value || state.form.pitch;
@@ -956,13 +1236,18 @@ function renderMySubmissionView() {
     return;
   }
 
-  container.innerHTML = state.submissions.map(s => `
+  container.innerHTML = state.submissions.map(s => {
+    const meta = getCompetitionMeta(s.competition_type);
+    return `
     <div class="wizard-card" style="margin-bottom:24px;">
       <div class="submission-status-header">
         <div style="min-width:0; flex:1;">
-          <span class="privacy-badge">🔒 محفوظة ومؤمنة في قاعدة البيانات (DB)</span>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+            <span class="comp-type-badge ${meta.cssClass}">${meta.shortLabel}</span>
+            <span class="privacy-badge">🔒 محفوظة ومؤمنة في قاعدة البيانات (DB)</span>
+          </div>
           <h2 class="submission-item-title">${s.title}</h2>
-          <div style="color:#38bdf8; font-size:0.88rem; font-weight:600;">🎯 فكرة التحدي: ${s.challenge_title}</div>
+          <div style="color:#38bdf8; font-size:0.88rem; font-weight:600;">${s.competition_type === 'theme_idea' ? '🌿 المحور:' : '🎯 الفكرة:'} ${s.challenge_title}</div>
         </div>
         <div class="sub-score-badge" style="background:#0284c7;">
           ⏳ ${state.lang === 'ar' ? 'الحالة: قيد التحكيم لدى اللجنة' : 'Status: Under Lajna Review'}
@@ -996,7 +1281,8 @@ function renderMySubmissionView() {
         </button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 // 4. Lajna (Jury) Suite View (Confidential Review)
@@ -1048,6 +1334,15 @@ function renderLajnaView() {
     return;
   }
 
+  const filteredSubs = state.submissions.filter(s => {
+    const cType = s.competition_type || 'marketing_strategy';
+    if (state.lajnaCompetitionFilter === 'all') return true;
+    return cType === state.lajnaCompetitionFilter;
+  });
+
+  const comp1Count = state.submissions.filter(s => (s.competition_type || 'marketing_strategy') === 'marketing_strategy').length;
+  const comp2Count = state.submissions.filter(s => s.competition_type === 'theme_idea').length;
+
   container.innerHTML = `
     <div class="lajna-banner">
       <div>
@@ -1069,48 +1364,73 @@ function renderLajnaView() {
       </div>
     </div>
 
+    <div class="competition-filter-bar" style="margin-bottom:20px;">
+      <button type="button" class="filter-chip ${state.lajnaCompetitionFilter === 'all' ? 'active' : ''}" onclick="setLajnaFilter('all')">
+        ${state.lang === 'ar' ? 'الكل' : 'All'} (${state.submissions.length})
+      </button>
+      <button type="button" class="filter-chip ${state.lajnaCompetitionFilter === 'marketing_strategy' ? 'active' : ''}" onclick="setLajnaFilter('marketing_strategy')">
+        🎯 ${state.lang === 'ar' ? 'المسابقة 1: استراتيجية التسويق' : 'Comp 1: Marketing'} (${comp1Count})
+      </button>
+      <button type="button" class="filter-chip ${state.lajnaCompetitionFilter === 'theme_idea' ? 'active' : ''}" onclick="setLajnaFilter('theme_idea')">
+        🌿 ${state.lang === 'ar' ? 'المسابقة 2: أفكار المحاور' : 'Comp 2: Theme Ideas'} (${comp2Count})
+      </button>
+    </div>
+
     <div class="section-header">
       <div>
         <h3 style="font-size:1.3rem;">📋 ${state.lang === 'ar' ? 'دراسات الجدوى المحفوظة في قاعدة البيانات' : 'Studies Stored in Database'}</h3>
-        <p class="section-subtitle">${state.submissions.length} ${state.lang === 'ar' ? 'مشروع مسجل قيد التحكيم' : 'projects in database'}</p>
+        <p class="section-subtitle">${filteredSubs.length} ${state.lang === 'ar' ? 'مشاركة مسجلة قيد التحكيم' : 'entries in this view'}</p>
       </div>
     </div>
 
-    <div class="submissions-grid">
-      ${state.submissions.map(s => `
-        <div class="submission-card">
-          <div>
-            <div class="sub-header">
-              <span style="font-size:0.75rem; color:#a78bfa; font-weight:700;">🎯 ${s.challenge_title}</span>
-              <span class="sub-score-badge">
-                ${s.average_score > 0 ? `⭐ ${s.average_score}/100 (${s.evaluations_count} تقييم)` : '⏳ لم يقيّم بعد'}
-              </span>
-            </div>
-            <h4 style="font-size:1.15rem; margin-bottom:8px;">${s.title}</h4>
-            <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:12px;">${s.pitch}</p>
-            
-            <div style="font-size:0.82rem; color:var(--text-dim); margin-bottom:12px;">
-              👥 ${s.team_name} • 💰 CAPEX: $${s.feasibility?.financial?.capex || 'N/A'} • ⏱️ التعادل: ${s.feasibility?.financial?.break_even_months || 'N/A'} mo
-            </div>
-
-            ${s.document_path ? `
-              <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.12); color:#34d399; padding:4px 10px; border-radius:6px; font-size:0.78rem; font-weight:700; margin-bottom:16px;">
-                📄 مرفق مستند: ${s.document_name || 'ملف دراسة'}
+    ${filteredSubs.length === 0 ? `
+      <div class="empty-state-card">
+        <div style="font-size:2.4rem; margin-bottom:8px;">📭</div>
+        <p style="color:var(--text-muted);">${state.lang === 'ar' ? 'لا توجد مشاركات في هذه المسابقة بعد.' : 'No submissions in this competition track yet.'}</p>
+      </div>
+    ` : `
+      <div class="submissions-grid">
+        ${filteredSubs.map(s => {
+          const meta = getCompetitionMeta(s.competition_type);
+          return `
+          <div class="submission-card">
+            <div>
+              <div class="sub-header">
+                <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-start;">
+                  <span class="comp-type-badge ${meta.cssClass}">${meta.shortLabel}</span>
+                  <span style="font-size:0.75rem; color:#a78bfa; font-weight:700;">${s.competition_type === 'theme_idea' ? '🌿' : '🎯'} ${s.challenge_title}</span>
+                </div>
+                <span class="sub-score-badge">
+                  ${s.average_score > 0 ? `⭐ ${s.average_score}/100 (${s.evaluations_count} تقييم)` : '⏳ لم يقيّم بعد'}
+                </span>
               </div>
-            ` : ''}
-          </div>
+              <h4 style="font-size:1.15rem; margin-bottom:8px;">${s.title}</h4>
+              <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:12px;">${s.pitch}</p>
+              
+              <div style="font-size:0.82rem; color:var(--text-dim); margin-bottom:12px;">
+                👥 ${s.team_name} • 💰 CAPEX: $${s.feasibility?.financial?.capex || 'N/A'} • ⏱️ التعادل: ${s.feasibility?.financial?.break_even_months || 'N/A'} mo
+              </div>
 
-          <div class="sub-footer">
-            <button class="btn btn-secondary btn-sm" onclick="openDetailModal('${s.id}')">
-              📄 ${state.lang === 'ar' ? 'فحص الجدوى والمستند' : 'Inspect Study & Doc'}
-            </button>
-            <button class="btn btn-lajna btn-sm" onclick="openEvaluationModal('${s.id}')">
-              ✍️ ${state.lang === 'ar' ? 'منح الدرجات والتقييم' : 'Evaluate & Score'}
-            </button>
+              ${s.document_path ? `
+                <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.12); color:#34d399; padding:4px 10px; border-radius:6px; font-size:0.78rem; font-weight:700; margin-bottom:16px;">
+                  📄 مرفق مستند: ${s.document_name || 'ملف دراسة'}
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="sub-footer">
+              <button class="btn btn-secondary btn-sm" onclick="openDetailModal('${s.id}')">
+                📄 ${state.lang === 'ar' ? 'فحص الجدوى والمستند' : 'Inspect Study & Doc'}
+              </button>
+              <button class="btn btn-lajna btn-sm" onclick="openEvaluationModal('${s.id}')">
+                ✍️ ${state.lang === 'ar' ? 'منح الدرجات والتقييم' : 'Evaluate & Score'}
+              </button>
+            </div>
           </div>
-        </div>
-      `).join('')}
-    </div>
+        `;
+        }).join('')}
+      </div>
+    `}
   `;
 }
 
@@ -1211,12 +1531,16 @@ async function toggleApproveLajna(userId, approve) {
   }
 }
 
-// 5. Leaderboard & Winner Podium View ("will see as lajna who won later")
+// 5. Leaderboard & Winner Podium View (Per Competition)
 function renderLeaderboardView() {
   const container = document.getElementById('leaderboard-view-content');
   if (!container) return;
 
-  const top3 = state.leaderboard.slice(0, 3);
+  const activeTab = state.leaderboardCompetitionTab || 'marketing_strategy';
+  const filteredLeaderboard = state.leaderboard.filter(item =>
+    (item.competition_type || 'marketing_strategy') === activeTab
+  );
+  const top3 = filteredLeaderboard.slice(0, 3);
 
   container.innerHTML = `
     <div class="leaderboard-header">
@@ -1228,8 +1552,8 @@ function renderLeaderboardView() {
       </h2>
       <p class="leaderboard-subtitle">
         ${state.lang === 'ar' 
-          ? 'تحديد الفائزين بناءً على مجموع درجات لجنة التحكيم لمصفوفة SWOT ودراسة الجدوى الفنية والمالية والمستند المرفق.'
-          : 'Determined by the Lajna committee scores across SWOT, feasibility study, and attached documentation.'}
+          ? 'تحديد الفائزين في كل مسابقة بناءً على مجموع درجات لجنة التحكيم لمصفوفة SWOT ودراسة الجدوى والمستند المرفق.'
+          : 'Determined per competition by Lajna committee scores across strategy/idea, SWOT, feasibility, and documentation.'}
       </p>
 
       ${(state.isLajnaOrAdmin) ? `
@@ -1250,6 +1574,27 @@ function renderLeaderboardView() {
         </p>
       </div>
     ` : `
+      <!-- Competition Switcher Tabs -->
+      <div class="competition-filter-bar" style="justify-content:center; margin-bottom:24px;">
+        <button type="button" class="filter-chip ${activeTab === 'marketing_strategy' ? 'active' : ''}" onclick="setLeaderboardCompetition('marketing_strategy')">
+          🎯 ${state.lang === 'ar' ? 'فائزو المسابقة 1: استراتيجية التسويق' : 'Competition 1: Marketing Strategy'}
+        </button>
+        <button type="button" class="filter-chip ${activeTab === 'theme_idea' ? 'active' : ''}" onclick="setLeaderboardCompetition('theme_idea')">
+          🌿 ${state.lang === 'ar' ? 'فائزو المسابقة 2: أفضل فكرة في المحور' : 'Competition 2: Best Theme Idea'}
+        </button>
+      </div>
+
+      ${filteredLeaderboard.length === 0 ? `
+        <div class="empty-state-card">
+          <div style="font-size:2.6rem; margin-bottom:10px;">🏆</div>
+          <h3>${state.lang === 'ar' ? 'لا توجد نتائج مسجلة في هذه المسابقة بعد' : 'No ranked entries in this competition yet'}</h3>
+          <p style="color:var(--text-muted); margin-top:8px;">
+            ${activeTab === 'theme_idea'
+              ? (state.lang === 'ar' ? 'ستظهر نتائج المسابقة الثانية هنا بعد فتح المحور وتقييم المشاركات.' : 'Competition 2 results will appear once the theme opens and entries are scored.')
+              : (state.lang === 'ar' ? 'لم تُقيّم أي مشاركة في المسابقة الأولى بعد.' : 'No Competition 1 entries scored yet.')}
+          </p>
+        </div>
+      ` : `
       <!-- Podium -->
       ${top3.length > 0 ? `
         <div class="podium-stage">
@@ -1297,7 +1642,7 @@ function renderLeaderboardView() {
             <tr>
               <th>#</th>
               <th>${state.lang === 'ar' ? 'المشروع والفريق' : 'Project & Team'}</th>
-              <th>${state.lang === 'ar' ? 'فكرة التحدي' : 'Track'}</th>
+              <th>${activeTab === 'theme_idea' ? (state.lang === 'ar' ? 'المحور' : 'Theme') : (state.lang === 'ar' ? 'فكرة التحدي' : 'Track')}</th>
               <th>${state.lang === 'ar' ? 'المستند المرفق' : 'Doc'}</th>
               <th>${state.lang === 'ar' ? 'الجمهور (/20)' : 'Audience (/20)'}</th>
               <th>${state.lang === 'ar' ? 'SWOT (/20)' : 'SWOT (/20)'}</th>
@@ -1307,7 +1652,7 @@ function renderLeaderboardView() {
             </tr>
           </thead>
           <tbody>
-            ${state.leaderboard.map((item, index) => `
+            ${filteredLeaderboard.map((item, index) => `
               <tr onclick="openDetailModal('${item.id}')" style="cursor:pointer;">
                 <td style="font-weight:800; color:${index === 0 ? '#fbbf24' : index === 1 ? '#cbd5e1' : index === 2 ? '#d97706' : 'var(--text-muted)'};">
                   ${index === 0 ? '🥇 1' : index === 1 ? '🥈 2' : index === 2 ? '🥉 3' : index + 1}
@@ -1332,6 +1677,7 @@ function renderLeaderboardView() {
           </tbody>
         </table>
       </div>
+      `}
     `}
   `;
 }
@@ -1345,6 +1691,8 @@ async function renderDbStatusView() {
 
   try {
     const data = await api('/api/db/status');
+    const pgOnline = data.postgres ? !!data.postgres.online : !!data.is_postgres;
+    const pgMsg = data.postgres?.status_message || (data.postgres_url_set ? 'Connected via DATABASE_URL' : 'SQLite fallback active (PostgreSQL URL ready in .env)');
 
     container.innerHTML = `
       <div class="db-card">
@@ -1367,10 +1715,10 @@ async function renderDbStatusView() {
 
           <div class="db-info-box">
             <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-dim); margin-bottom:4px;">PostgreSQL Port 5432 Status</div>
-            <div style="font-size:1.1rem; font-weight:700; color:${data.postgres.online ? '#34d399' : '#f59e0b'};">
-              ${data.postgres.online ? '🟢 Online & Connected' : '🟡 Ready (Connects when PostgreSQL starts)'}
+            <div style="font-size:1.1rem; font-weight:700; color:${pgOnline ? '#34d399' : '#f59e0b'};">
+              ${pgOnline ? '🟢 Online & Connected' : '🟡 Ready (Connects when PostgreSQL starts)'}
             </div>
-            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;">${data.postgres.status_message}</div>
+            <div style="font-size:0.82rem; color:var(--text-muted); margin-top:6px;">${pgMsg}</div>
           </div>
         </div>
 
@@ -1412,11 +1760,16 @@ function renderDetailModalContent(sub) {
   const fin = feas.financial || {};
   const evals = sub.evaluations || [];
 
+  const meta = getCompetitionMeta(sub.competition_type);
+
   container.innerHTML = `
     <div style="margin-bottom:24px;">
       <div class="detail-header-row">
-        <span class="privacy-badge">🔒 مستند ودراسة محفوظة في قاعدة البيانات (DB)</span>
-        <span style="font-size:0.8rem; color:#38bdf8; font-weight:700;">🎯 ${sub.challenge_title}</span>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+          <span class="comp-type-badge ${meta.cssClass}">${meta.shortLabel}</span>
+          <span class="privacy-badge">🔒 مستند ودراسة محفوظة في قاعدة البيانات (DB)</span>
+        </div>
+        <span style="font-size:0.8rem; color:#38bdf8; font-weight:700;">${sub.competition_type === 'theme_idea' ? '🌿' : '🎯'} ${sub.challenge_title}</span>
       </div>
       <h2 class="detail-title">${sub.title}</h2>
       <p style="font-size:1rem; color:var(--text-muted);">${sub.pitch}</p>
@@ -1553,10 +1906,32 @@ function renderEvaluationModalContent(sub) {
   const container = document.getElementById('eval-modal-body');
   if (!container) return;
 
+  const isTheme = sub.competition_type === 'theme_idea';
+  const meta = getCompetitionMeta(sub.competition_type);
+
+  const labels = isTheme
+    ? {
+        aud: '1. ملاءمة الفكرة للمحور والجمهور المستهدف (Theme Fit & Audience)',
+        swot: '2. عمق وواقعية تحليل سوات (SWOT Analysis Rigor)',
+        tech: '3. قابلية التنفيذ والجدوى الفنية والمستند (Execution & Doc)',
+        fin: '4. الجدوى المالية والاستدامة (Financial Viability & ROI)',
+        inn: '5. الإبداع والأصالة في المحور (Creativity & Innovation)'
+      }
+    : {
+        aud: '1. وضوح الجمهور المستهدف واستراتيجية التسويق (Marketing & Audience)',
+        swot: '2. عمق وواقعية تحليل سوات (SWOT Analysis Rigor)',
+        tech: '3. الجدوى الفنية والتسويقية والمستند (Strategy Execution & Doc)',
+        fin: '4. الجدوى المالية ونظام المدفوعات والعائد (Financial Viability & ROI)',
+        inn: '5. تميز الخطة وجودة العرض والمستند (Strategy Differentiation & Pitch)'
+      };
+
   container.innerHTML = `
     <div style="margin-bottom:20px;">
-      <span style="font-size:0.75rem; color:#a78bfa; font-weight:700;">🎯 ${sub.challenge_title}</span>
-      <h3 style="font-size:1.4rem; margin-top:4px;">${sub.title}</h3>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:6px;">
+        <span class="comp-type-badge ${meta.cssClass}">${meta.shortLabel}</span>
+        <span style="font-size:0.75rem; color:#a78bfa; font-weight:700;">${isTheme ? '🌿' : '🎯'} ${sub.challenge_title}</span>
+      </div>
+      <h3 style="font-size:1.35rem; margin-top:4px;">${sub.title}</h3>
       <p style="color:var(--text-muted); font-size:0.9rem;">${sub.pitch}</p>
       
       ${sub.document_path ? `
@@ -1582,7 +1957,7 @@ function renderEvaluationModalContent(sub) {
 
     <div class="rubric-card">
       <div class="rubric-header">
-        <label class="form-label" style="margin:0;">1. وضوح المشكلة والجمهور المستهدف (Target Audience Fit)</label>
+        <label class="form-label" style="margin:0;">${labels.aud}</label>
         <span style="font-weight:700; color:#38bdf8;" id="val-aud">18 / 20</span>
       </div>
       <input type="range" class="rubric-slider" id="rubric-audience" min="0" max="20" value="18" oninput="updateRubricTotal()">
@@ -1590,7 +1965,7 @@ function renderEvaluationModalContent(sub) {
 
     <div class="rubric-card">
       <div class="rubric-header">
-        <label class="form-label" style="margin:0;">2. عمق وواقعية تحليل سوات (SWOT Analysis Rigor)</label>
+        <label class="form-label" style="margin:0;">${labels.swot}</label>
         <span style="font-weight:700; color:#38bdf8;" id="val-swot">17 / 20</span>
       </div>
       <input type="range" class="rubric-slider" id="rubric-swot" min="0" max="20" value="17" oninput="updateRubricTotal()">
@@ -1598,7 +1973,7 @@ function renderEvaluationModalContent(sub) {
 
     <div class="rubric-card">
       <div class="rubric-header">
-        <label class="form-label" style="margin:0;">3. الجدوى الفنية والتكنولوجية والمستند (Technical Feasibility & Doc)</label>
+        <label class="form-label" style="margin:0;">${labels.tech}</label>
         <span style="font-weight:700; color:#38bdf8;" id="val-tech">22 / 25</span>
       </div>
       <input type="range" class="rubric-slider" id="rubric-tech" min="0" max="25" value="22" oninput="updateRubricTotal()">
@@ -1606,7 +1981,7 @@ function renderEvaluationModalContent(sub) {
 
     <div class="rubric-card">
       <div class="rubric-header">
-        <label class="form-label" style="margin:0;">4. الجدوى المالية ونقطة التعادل (Financial Viability & ROI)</label>
+        <label class="form-label" style="margin:0;">${labels.fin}</label>
         <span style="font-weight:700; color:#38bdf8;" id="val-fin">20 / 25</span>
       </div>
       <input type="range" class="rubric-slider" id="rubric-financial" min="0" max="25" value="20" oninput="updateRubricTotal()">
@@ -1614,7 +1989,7 @@ function renderEvaluationModalContent(sub) {
 
     <div class="rubric-card">
       <div class="rubric-header">
-        <label class="form-label" style="margin:0;">5. الابتكار وجودة العرض والمستند (Innovation & Pitch)</label>
+        <label class="form-label" style="margin:0;">${labels.inn}</label>
         <span style="font-weight:700; color:#38bdf8;" id="val-inn">8 / 10</span>
       </div>
       <input type="range" class="rubric-slider" id="rubric-innovation" min="0" max="10" value="8" oninput="updateRubricTotal()">
@@ -1757,6 +2132,11 @@ function setupEventListeners() {
       const view = item.getAttribute('data-view');
       navigateTo(view);
     });
+  });
+
+  const wizardSelect = document.getElementById('wizard-challenge-select');
+  wizardSelect?.addEventListener('change', (e) => {
+    state.wizardChallengeId = e.target.value || null;
   });
 
   const loginForm = document.getElementById('modal-login-form') || document.getElementById('form-login');

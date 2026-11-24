@@ -278,7 +278,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // API: Challenges (Ideas Management - "ill give the ideas")
+    // API: Challenges & Themes (Competition 1 Ideas & Competition 2 Themes)
     // -------------------------------------------------------------
     if (pathname === '/api/challenges' && req.method === 'GET') {
       const challenges = await db.all(`
@@ -286,7 +286,7 @@ const server = http.createServer(async (req, res) => {
                (SELECT COUNT(*) FROM submissions s WHERE s.challenge_id = c.id) as submission_count
         FROM challenges c
         WHERE c.is_active = 1
-        ORDER BY c.created_at ASC
+        ORDER BY c.competition_type ASC, c.created_at ASC
       `);
 
       return sendJSON(res, 200, { challenges });
@@ -295,46 +295,79 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/challenges' && req.method === 'POST') {
       const authUser = getAuthUser(req);
       if (!authUser || (authUser.role !== 'admin' && authUser.role !== 'lajna')) {
-        return sendJSON(res, 403, { error: 'Only Organizer (Admin) or Lajna can add competition ideas' });
+        return sendJSON(res, 403, { error: 'Only Organizer (Admin) or Lajna can add competition ideas or themes' });
       }
 
-      const { title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant } = await parseBody(req);
+      const {
+        competition_type = 'marketing_strategy',
+        is_open = 1,
+        title,
+        category,
+        summary,
+        problem_statement,
+        expected_outcomes,
+        target_sectors,
+        reward_or_grant
+      } = await parseBody(req);
+
       if (!title || !problem_statement) {
-        return sendJSON(res, 400, { error: 'Idea Title and Problem Statement are required' });
+        return sendJSON(res, 400, { error: 'Title and Description / Problem Statement are required' });
       }
 
-      const id = 'challenge_' + crypto.randomUUID().slice(0, 8);
+      const validType = competition_type === 'theme_idea' ? 'theme_idea' : 'marketing_strategy';
+      const openFlag = (is_open === 0 || is_open === false || is_open === '0') ? 0 : 1;
+      const id = (validType === 'theme_idea' ? 'theme_' : 'challenge_') + crypto.randomUUID().slice(0, 8);
       const now = new Date().toISOString();
 
       await db.run(`
-        INSERT INTO challenges (id, title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant, author_id, is_active, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-      `, [id, title.trim(), category || 'General Innovation', summary || '', problem_statement, expected_outcomes || '', target_sectors || '', reward_or_grant || '', authUser.id, now]);
+        INSERT INTO challenges (id, competition_type, title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant, author_id, is_active, is_open, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+      `, [
+        id,
+        validType,
+        title.trim(),
+        category || (validType === 'theme_idea' ? 'Competition Theme' : 'Marketing Strategy'),
+        summary || '',
+        problem_statement,
+        expected_outcomes || '',
+        target_sectors || '',
+        reward_or_grant || '',
+        authUser.id,
+        openFlag,
+        now
+      ]);
 
-      return sendJSON(res, 201, { message: 'Idea created successfully', id });
+      return sendJSON(res, 201, {
+        message: validType === 'theme_idea' ? 'Competition 2 Theme saved successfully' : 'Competition 1 Idea created successfully',
+        id
+      });
     }
 
     if (pathname.startsWith('/api/challenges/') && req.method === 'PUT') {
       const authUser = getAuthUser(req);
       if (!authUser || (authUser.role !== 'admin' && authUser.role !== 'lajna')) {
-        return sendJSON(res, 403, { error: 'Only Organizer (Admin) or Lajna can edit ideas' });
+        return sendJSON(res, 403, { error: 'Only Organizer (Admin) or Lajna can edit ideas or themes' });
       }
 
       const id = pathname.split('/')[3];
-      const { title, category, summary, problem_statement, expected_outcomes, reward_or_grant } = await parseBody(req);
+      const { competition_type, is_open, title, category, summary, problem_statement, expected_outcomes, reward_or_grant } = await parseBody(req);
+      const validType = competition_type ? (competition_type === 'theme_idea' ? 'theme_idea' : 'marketing_strategy') : null;
+      const openFlag = is_open === undefined || is_open === null ? null : ((is_open === 0 || is_open === false || is_open === '0') ? 0 : 1);
 
       await db.run(`
         UPDATE challenges
-        SET title = COALESCE(?, title),
+        SET competition_type = COALESCE(?, competition_type),
+            is_open = COALESCE(?, is_open),
+            title = COALESCE(?, title),
             category = COALESCE(?, category),
             summary = COALESCE(?, summary),
             problem_statement = COALESCE(?, problem_statement),
             expected_outcomes = COALESCE(?, expected_outcomes),
             reward_or_grant = COALESCE(?, reward_or_grant)
         WHERE id = ?
-      `, [title, category, summary, problem_statement, expected_outcomes, reward_or_grant, id]);
+      `, [validType, openFlag, title, category, summary, problem_statement, expected_outcomes, reward_or_grant, id]);
 
-      return sendJSON(res, 200, { message: 'Idea updated successfully' });
+      return sendJSON(res, 200, { message: 'Competition entry updated successfully' });
     }
 
     // -------------------------------------------------------------
@@ -350,6 +383,8 @@ const server = http.createServer(async (req, res) => {
         SELECT s.*, 
                c.title as challenge_title,
                c.category as challenge_category,
+               c.competition_type as competition_type,
+               c.is_open as challenge_is_open,
                COALESCE((SELECT AVG(total_score) FROM evaluations e WHERE e.submission_id = s.id), 0) as average_score,
                (SELECT COUNT(*) FROM evaluations e WHERE e.submission_id = s.id) as evaluations_count
         FROM submissions s
@@ -396,6 +431,8 @@ const server = http.createServer(async (req, res) => {
         SELECT s.*, 
                c.title as challenge_title,
                c.category as challenge_category,
+               c.competition_type as competition_type,
+               c.is_open as challenge_is_open,
                COALESCE((SELECT AVG(total_score) FROM evaluations e WHERE e.submission_id = s.id), 0) as average_score,
                (SELECT COUNT(*) FROM evaluations e WHERE e.submission_id = s.id) as evaluations_count
         FROM submissions s
@@ -454,7 +491,17 @@ const server = http.createServer(async (req, res) => {
       } = body;
 
       if (!challenge_id || !title || !pitch) {
-        return sendJSON(res, 400, { error: 'Challenge track, project title, and pitch are required' });
+        return sendJSON(res, 400, { error: 'Challenge/Theme track, title, and pitch are required' });
+      }
+
+      const targetChallenge = await db.get('SELECT id, competition_type, is_active, is_open FROM challenges WHERE id = ?', [challenge_id]);
+      if (!targetChallenge || targetChallenge.is_active === 0) {
+        return sendJSON(res, 404, { error: 'Selected competition track not found' });
+      }
+      if (targetChallenge.is_open === 0) {
+        return sendJSON(res, 400, {
+          error: 'هذا المحور بانتظار الإعلان الرسمي من الإدارة ولم يُفتح للتقديم بعد.'
+        });
       }
 
       const id = 'sub_' + crypto.randomUUID().slice(0, 10);
@@ -577,7 +624,7 @@ const server = http.createServer(async (req, res) => {
 
       const leaderboard = await db.all(`
         SELECT s.id, s.title, s.pitch, s.team_name, s.author_name, s.status, s.document_path, s.document_name,
-               c.title as challenge_title, c.category as challenge_category,
+               c.title as challenge_title, c.category as challenge_category, c.competition_type as competition_type,
                ROUND(AVG(e.total_score), 1) as avg_score,
                COUNT(e.id) as evaluations_count,
                ROUND(AVG(e.score_problem_audience), 1) as avg_audience,
@@ -588,7 +635,7 @@ const server = http.createServer(async (req, res) => {
         FROM submissions s
         JOIN challenges c ON s.challenge_id = c.id
         LEFT JOIN evaluations e ON e.submission_id = s.id
-        GROUP BY s.id, c.title, c.category
+        GROUP BY s.id, c.title, c.category, c.competition_type
         ORDER BY avg_score DESC
       `);
 

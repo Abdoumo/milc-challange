@@ -90,6 +90,8 @@ async function initDatabase() {
       const schemaPath = path.join(__dirname, '..', 'database', 'init_postgres.sql');
       const schemaSql = fs.readFileSync(schemaPath, 'utf8');
       await pgPool.query(schemaSql);
+      await pgPool.query(`ALTER TABLE challenges ADD COLUMN IF NOT EXISTS competition_type VARCHAR(32) NOT NULL DEFAULT 'marketing_strategy';`);
+      await pgPool.query(`ALTER TABLE challenges ADD COLUMN IF NOT EXISTS is_open INT NOT NULL DEFAULT 1;`);
       console.log('[Database] PostgreSQL tables and indexes verified successfully.');
     } catch (err) {
       console.error('[Database] PostgreSQL initialization error:', err.message);
@@ -111,6 +113,7 @@ async function initDatabase() {
 
       CREATE TABLE IF NOT EXISTS challenges (
         id TEXT PRIMARY KEY,
+        competition_type TEXT NOT NULL DEFAULT 'marketing_strategy',
         title TEXT NOT NULL,
         category TEXT NOT NULL,
         summary TEXT NOT NULL,
@@ -120,6 +123,7 @@ async function initDatabase() {
         reward_or_grant TEXT DEFAULT '',
         author_id TEXT,
         is_active INTEGER DEFAULT 1,
+        is_open INTEGER DEFAULT 1,
         created_at TEXT NOT NULL
       );
 
@@ -176,6 +180,21 @@ async function initDatabase() {
       );
     `);
     console.log('[Database] SQLite tables verified.');
+
+    // Safe SQLite column migrations for existing databases
+    try {
+      const cols = sqliteDb.prepare('PRAGMA table_info(challenges)').all().map(c => c.name);
+      if (!cols.includes('competition_type')) {
+        sqliteDb.exec("ALTER TABLE challenges ADD COLUMN competition_type TEXT NOT NULL DEFAULT 'marketing_strategy'");
+        console.log('[Database] Migrated challenges.competition_type');
+      }
+      if (!cols.includes('is_open')) {
+        sqliteDb.exec('ALTER TABLE challenges ADD COLUMN is_open INTEGER NOT NULL DEFAULT 1');
+        console.log('[Database] Migrated challenges.is_open');
+      }
+    } catch (migErr) {
+      console.error('[Database Migration]', migErr.message);
+    }
   }
 
   // Ensure default platform settings exist
@@ -189,16 +208,16 @@ async function initDatabase() {
     console.error('[Database Settings]', err.message);
   }
 
-  // Ensure Challenge #1 (Universal AI Automation OS) exists if no challenges
+  // Ensure Challenge #1 (Competition 1: Marketing Strategy) exists if no marketing_strategy challenges
   try {
-    const existingChallenges = await all('SELECT id FROM challenges LIMIT 1');
-    if (!existingChallenges || existingChallenges.length === 0) {
+    const existingComp1 = await all("SELECT id FROM challenges WHERE competition_type = 'marketing_strategy' LIMIT 1");
+    if (!existingComp1 || existingComp1.length === 0) {
       const challengeId = 'challenge_omni_ai_automation';
       const now = new Date().toISOString();
       await run(`
         INSERT INTO challenges (
-          id, title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant, is_active, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+          id, competition_type, title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant, is_active, is_open, created_at
+        ) VALUES (?, 'marketing_strategy', ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)
       `, [
         challengeId,
         'منظومة الأتمتة الشاملة بالذكاء الاصطناعي (Omni AI Automation OS)',
@@ -207,30 +226,64 @@ async function initDatabase() {
         `تهدر المؤسسات والشركات والأفراد آلاف الساعات سنوياً في تنفيذ الأعمال الرقمية المتكررة: إنشاء وتنسيق مستندات Word، معالجة الجداول وتحليل بيانات Excel المعقدة، تصميم عروض PowerPoint التقديمية، تعبئة النماذج والتنقل في المواقع الإلكترونية، وجدولة المواعيد وتنسيق اللقاءات (Rendez-vous).
 
 🎯 التحدي المطلوب من المشاركين:
-تصميم وبناء دراسة متكاملة لمنظومة أتمتة ذاتية (Autonomous AI Automation OS) تعمل كـ "وكيل عمل ذكي شامل" يقوم بتنفيذ كافة هذه المهام، مع تمكين كل عميل من ربط مفاتيح الذكاء الاصطناعي الخاصة به (Bring-Your-Own-API Key / Multi-Tenant AI Integration) لضمان الخصوصية والتحكم في التكاليف، مع توفير نموذج ربحي ونظام مدفوعات متكامل (Payment System).
+تقديم أفضل استراتيجية تسويق ودراسة جدوى متكاملة لمنظومة أتمتة ذاتية (Autonomous AI Automation OS) تعمل كـ "وكيل عمل ذكي شامل" يقوم بتنفيذ كافة هذه المهام، مع تمكين كل عميل من ربط مفاتيح الذكاء الاصطناعي الخاصة به (Bring-Your-Own-API Key / Multi-Tenant AI Integration) لضمان الخصوصية والتحكم في التكاليف، مع توفير نموذج ربحي ونظام مدفوعات متكامل (Payment System).
 
 📋 المتطلبات الإلزامية في استمارة المشاركة:
 1. دراسة الجمهور المستهدف (Target Audience): تحديد القطاعات والشرائح المستفيدة وتحليل احتياجاتهم (Pain Points) والقيمة المقدمة.
 2. تحليل SWOT الرباعي: تحليل نقاط القوة، نقاط الضعف، الفرص السوقية، والتهديدات التقنية والتنافسية.
 3. دراسة الجدوى الفنية (Technical Feasibility): المعمارية التقنية، محركات الأتمتة لمستندات Office ومواقع الويب، ومستوى الجاهزية (TRL).
-4. دراسة الجدوى التشغيلية والتسويقية (Market & Operational Feasibility): قنوات التسويق والميزة التنافسية.
+4. استراتيجية التسويق والوصول للأسواق (Marketing Strategy): قنوات التسويق، خطة الاستحواذ، والميزة التنافسية.
 5. دراسة الجدوى المالية ونظام المدفوعات (Financial Feasibility & Payment System):
    - هيكل التكاليف (CAPEX & OPEX) والعائد على الاستثمار المتوقع (ROI).
    - نموذج التسعير والفوترة وبوابات الدفع الإلكترونية المقترحة (Stripe / Local Payment Gateways / نظام الاشتراكات ونظام الأرصدة Pay-Per-Task).
 6. إرفاق ملف التوثيق والدراسة الكاملة (PDF / Word / PowerPoint / Excel) عبر خانة رفع الملفات.`,
-        `• محرك ذكي لأتمتة مستندات Office (Word, Excel, PowerPoint) ببيانات ديناميكية دقيقة.
-• وكيل ويب (Web Agent) قادر على أتمتة تصفح المواقع وجدولة المواعيد واللقاءات (Rendez-vous) تلقائياً.
+        `• خطة واستراتيجية تسويق متكاملة للوصول إلى العملاء المستهدفين وتحقيق النمو.
+• إبراز القيمة التنافسية لأتمتة مستندات Office (Word, Excel, PowerPoint) ووكيل الويب وجدولة المواعيد.
 • معمارية آمنة تتيح لكل عميل استخدام مفاتيح الـ AI الخاصة به مع عزل كامل للبيانات.
 • نظام مدفوعات وفواتير إلكترونية متكامل (بوابات الدفع، الاشتراكات الشهرية/السنوية، ونظام الرصيد).
-• دراسة جدوى اقتصادية وفنية شاملة مرفقة بملف توثيقي على المنصة.`,
+• دراسة جدوى اقتصادية واستراتيجية شاملة مرفقة بملف توثيقي على المنصة.`,
         'الشركات والمؤسسات، مكاتب المحاسبة والاستشارات، العيادات والمراكز الخدمية، رواد الأعمال، المستقلون (Freelancers).',
         'جائزة المركز الأول: احتضان تقني للمشروع + دعم تمويلي لتطوير النموذج الأولي + اعتماد رسمي من لجنة التحكيم.',
         now
       ]);
-      console.log('[Database] Seeded Challenge #1: Omni AI Automation OS');
+      console.log('[Database] Seeded Competition 1 Challenge: Omni AI Automation OS');
     }
   } catch (err) {
     console.error('[Database Challenge Seed]', err.message);
+  }
+
+  // Ensure Competition 2 Placeholder (Theme Idea - Admin provides theme later) exists
+  try {
+    const existingComp2 = await all("SELECT id FROM challenges WHERE competition_type = 'theme_idea' LIMIT 1");
+    if (!existingComp2 || existingComp2.length === 0) {
+      const themeId = 'theme_comp2_tba';
+      const now = new Date().toISOString();
+      await run(`
+        INSERT INTO challenges (
+          id, competition_type, title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant, is_active, is_open, created_at
+        ) VALUES (?, 'theme_idea', ?, ?, ?, ?, ?, ?, ?, 1, 0, ?)
+      `, [
+        themeId,
+        'محور المسابقة الثانية: سيتم الإعلان عن المحور الرسمي قريباً',
+        'أمثلة مقترحة: الطبيعة والاستدامة (Nature) • سيتم تحديد المحور لاحقاً',
+        'في هذه المسابقة تقوم الإدارة بطرح محور عام ومفتوح (مثل: الطبيعة والبيئة...)، ويتنافس المشاركون على ابتكار أفضل فكرة مشروع إبداعية تخدم هذا المحور مع دراسة الجدوى الأولية.',
+        `⏳ لم يتم نشر المحور الرسمي بعد — ستقوم إدارة المسابقة (Admin) بتحديد المحور وإتاحة التقديم قريباً.
+
+🌿 كيف ستعمل المسابقة الثانية عند فتح المحور:
+1. تحدد الإدارة المحور الرئيسي للمسابقة (على سبيل المثال: الطبيعة والاستدامة، أو محور آخر تعلنه الإدارة).
+2. يبتكر كل مشارك أو فريق أفضل فكرة مشروع أصلية تخدم هذا المحور.
+3. يقدّم المشارك شرح الفكرة، الجمهور المستهدف، تحليل SWOT، والجدوى الأولية مع إرفاق ملف العرض التوضيحي (PDF / PPTX / DOCX).`,
+        `• فكرة مشروع أصلية ومبتكرة مرتبطة مباشرة بمحور المسابقة المعلن.
+• توضيح المشكلة التي تعالجها الفكرة والقيمة المضافة للمجتمع أو السوق.
+• تحليل SWOT والجدوى المبدئية مع إرفاق مستند أو عرض تقديمي (PDF / PPTX / DOC).`,
+        'مفتوح لجميع المبدعين، الفرق الطلابية، ورواد الأعمال.',
+        'جائزة أفضل فكرة في المحور: احتضان وتطوير الفكرة + شهادة تميز واعتماد من لجنة التحكيم.',
+        now
+      ]);
+      console.log('[Database] Seeded Competition 2 Placeholder Theme (TBA)');
+    }
+  } catch (err) {
+    console.error('[Database Comp2 Seed]', err.message);
   }
 
   // Ensure default Admin exists if no admin exists

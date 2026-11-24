@@ -62,9 +62,9 @@ ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email, rol
   exportSQL += '\n-- Insert Challenges\n';
   const challenges = await db.all('SELECT * FROM challenges');
   for (const c of challenges) {
-    exportSQL += `INSERT INTO challenges (id, title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant, author_id, is_active, created_at)
-VALUES (${escapeSQL(c.id)}, ${escapeSQL(c.title)}, ${escapeSQL(c.category)}, ${escapeSQL(c.summary)}, ${escapeSQL(c.problem_statement)}, ${escapeSQL(c.expected_outcomes)}, ${escapeSQL(c.target_sectors)}, ${escapeSQL(c.reward_or_grant)}, ${escapeSQL(c.author_id)}, ${c.is_active === 1 ? 1 : 0}, ${escapeSQL(c.created_at)})
-ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title;\n`;
+    exportSQL += `INSERT INTO challenges (id, competition_type, title, category, summary, problem_statement, expected_outcomes, target_sectors, reward_or_grant, author_id, is_active, is_open, created_at)
+VALUES (${escapeSQL(c.id)}, ${escapeSQL(c.competition_type || 'marketing_strategy')}, ${escapeSQL(c.title)}, ${escapeSQL(c.category)}, ${escapeSQL(c.summary)}, ${escapeSQL(c.problem_statement)}, ${escapeSQL(c.expected_outcomes)}, ${escapeSQL(c.target_sectors)}, ${escapeSQL(c.reward_or_grant)}, ${escapeSQL(c.author_id)}, ${c.is_active === 1 ? 1 : 0}, ${c.is_open === 0 ? 0 : 1}, ${escapeSQL(c.created_at)})
+ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, competition_type = EXCLUDED.competition_type, is_open = EXCLUDED.is_open;\n`;
   }
 
   exportSQL += '\n-- Insert Submissions\n';
