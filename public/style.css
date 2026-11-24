@@ -1426,15 +1426,19 @@ footer {
 [dir="rtl"] .toast-error { border-left: none; border-right: 4px solid var(--danger); }
 [dir="rtl"] .leaderboard-table { text-align: right; }
 
-/* Responsive */
+/* ============================================================
+   RESPONSIVE - TABLET (max-width: 900px)
+   ============================================================ */
 @media (max-width: 900px) {
   .navbar {
-    padding: 8px 0;
+    height: auto !important;
+    min-height: auto !important;
+    padding: 10px 0 !important;
   }
   .nav-container {
     flex-wrap: wrap;
     gap: 10px;
-    padding: 0 16px;
+    padding: 0 16px !important;
   }
   .brand-tagline {
     display: none;
@@ -1459,13 +1463,488 @@ footer {
     font-size: 0.82rem;
   }
   .nav-db-pill {
-    display: none;
+    display: none !important;
   }
+
+  .hero { padding: 36px 0 24px 0; }
+  .hero h2 { font-size: 1.9rem; }
+  .hero p { font-size: 1rem; }
+  .hero-stats { gap: 20px; flex-wrap: wrap; }
+
   .swot-grid { grid-template-columns: 1fr; }
   .feasibility-grid { grid-template-columns: 1fr; }
   .challenges-grid { grid-template-columns: 1fr; }
+  .submissions-grid { grid-template-columns: 1fr; }
+
   .podium-stage { flex-direction: column; align-items: stretch; height: auto; }
   .podium-card { height: auto !important; order: initial !important; }
+
+  .wizard-card { padding: 20px; }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .section-title { font-size: 1.4rem; }
+
+  .lajna-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE - MOBILE (max-width: 600px)
+   ============================================================ */
+@media (max-width: 600px) {
+  /* --- Global --- */
+  .container {
+    padding: 0 14px;
+  }
+
+  /* --- Navbar --- */
+  .navbar {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 8px 0 !important;
+  }
+  .nav-container {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 0 12px !important;
+  }
+
+  .brand-emblem {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .brand-logo-svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .brand-name {
+    font-size: 1.05rem !important;
+  }
+  .brand-edition {
+    font-size: 0.75rem !important;
+  }
+  .brand-badge {
+    font-size: 0.55rem !important;
+    padding: 1px 5px !important;
+  }
+  .brand-tagline {
+    display: none !important;
+  }
+  .brand-info {
+    gap: 0 !important;
+  }
+
+  .nav-menu {
+    order: 3 !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav-menu::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-pill-group {
+    width: max-content !important;
+    padding: 3px 4px !important;
+    gap: 2px !important;
+  }
+  .nav-item {
+    padding: 5px 9px !important;
+    font-size: 0.75rem !important;
+    gap: 4px !important;
+  }
+  .nav-icon {
+    width: 13px !important;
+    height: 13px !important;
+  }
+  .nav-counter {
+    font-size: 0.6rem !important;
+    padding: 0px 5px !important;
+  }
+
+  .nav-actions {
+    gap: 6px !important;
+  }
+  .nav-db-pill {
+    display: none !important;
+  }
+  .lang-segmented-control {
+    padding: 2px !important;
+  }
+  .lang-opt {
+    padding: 2px 7px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .user-pill {
+    padding: 3px 8px 3px 3px !important;
+    gap: 5px !important;
+  }
+  .user-avatar-circle {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 0.72rem !important;
+  }
+  .user-pill-name {
+    font-size: 0.76rem !important;
+  }
+  .role-badge {
+    font-size: 0.58rem !important;
+    padding: 1px 5px !important;
+  }
+
+  .nav-logout-btn {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .nav-btn-ghost {
+    font-size: 0.76rem !important;
+    padding: 5px 10px !important;
+  }
+  .nav-btn-glow {
+    font-size: 0.76rem !important;
+    padding: 5px 12px !important;
+  }
+
+  /* --- Hero Section --- */
+  .hero {
+    padding: 28px 0 20px 0;
+  }
+  .hero-pill {
+    font-size: 0.75rem;
+    padding: 5px 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+  .hero h2 {
+    font-size: 1.45rem !important;
+    letter-spacing: -0.5px;
+    line-height: 1.4;
+  }
+  .hero p {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+  .stat-value {
+    font-size: 1.2rem;
+  }
+  .stat-label {
+    font-size: 0.7rem;
+  }
+
+  /* --- Hero CTA Buttons --- */
+  .hero-content > div[style*="display:flex"] {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .btn-lg {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* --- Section Headers --- */
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-size: 1.2rem;
+    gap: 8px;
+  }
+  .section-subtitle {
+    font-size: 0.84rem;
+  }
+
+  /* --- Challenge Cards --- */
+  .challenges-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  .challenge-card {
+    padding: 18px;
+  }
+  .challenge-title {
+    font-size: 1.1rem;
+  }
+  .challenge-summary {
+    font-size: 0.85rem;
+  }
+  .challenge-details-box {
+    padding: 12px;
+    font-size: 0.82rem;
+  }
+  .challenge-footer {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .challenge-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .challenge-badge {
+    font-size: 0.7rem;
+    flex-wrap: wrap;
+  }
+
+  /* --- Wizard --- */
+  .wizard-card {
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+  .wizard-steps {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-bottom: 24px;
+    gap: 4px;
+    padding-bottom: 4px;
+  }
+  .wizard-steps::-webkit-scrollbar {
+    display: none;
+  }
+  .wizard-step {
+    min-width: 70px;
+  }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+  }
+  .step-label {
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  /* --- Forms --- */
+  .form-label {
+    font-size: 0.82rem;
+  }
+  .form-control {
+    font-size: 0.88rem;
+    padding: 9px 12px;
+  }
+
+  /* --- SWOT Grid --- */
+  .swot-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+  .swot-quadrant {
+    padding: 14px;
+  }
+  .swot-header h4 {
+    font-size: 0.9rem;
+  }
+  .swot-add-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .swot-add-row .btn {
+    width: 100%;
+  }
+
+  /* --- Feasibility Grid --- */
+  .feasibility-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+  .feasibility-box {
+    padding: 16px;
+  }
+  .feasibility-box h4 {
+    font-size: 0.95rem;
+  }
+
+  /* --- Financial Calculator --- */
+  .calc-result-box {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  .calc-item .val {
+    font-size: 1.1rem;
+  }
+  .calc-item .lbl {
+    font-size: 0.68rem;
+  }
+
+  /* --- Submissions Grid --- */
+  .submissions-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  .submission-card {
+    padding: 18px;
+  }
+
+  /* --- Leaderboard --- */
+  .leaderboard-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .leaderboard-table {
+    min-width: 500px;
+  }
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  /* --- Podium --- */
+  .podium-stage {
+    flex-direction: column !important;
+    gap: 14px;
+  }
+  .podium-card {
+    height: auto !important;
+    order: initial !important;
+    padding: 18px 14px;
+    border-radius: var(--radius-md) !important;
+  }
+  .podium-trophy {
+    font-size: 1.8rem;
+  }
+  .podium-score {
+    font-size: 1.4rem;
+  }
+
+  /* --- Lajna Panel --- */
+  .lajna-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+    gap: 12px;
+  }
+  .total-score-display {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+    padding: 14px;
+  }
+  .total-score-number {
+    font-size: 2rem;
+  }
+  .rubric-card {
+    padding: 14px;
+  }
+
+  /* --- Modals --- */
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-end;
+  }
+  .modal-content {
+    max-width: 100% !important;
+    max-height: 92vh;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+  .modal-header {
+    padding: 14px 16px;
+  }
+  .modal-header h3 {
+    font-size: 0.98rem !important;
+  }
+  .modal-body {
+    padding: 16px;
+  }
+  .modal-footer {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+  .modal-footer .btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+    font-size: 0.82rem;
+  }
+
+  /* --- Upload Zone --- */
+  .upload-dropzone {
+    padding: 20px 14px;
+  }
+  .upload-icon {
+    font-size: 2rem;
+  }
+  .doc-attached-card {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  /* --- Toast Notifications --- */
+  .toast-container {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+  .toast {
+    font-size: 0.82rem;
+    padding: 10px 14px;
+  }
+
+  /* --- Footer --- */
+  footer .container {
+    flex-direction: column !important;
+    gap: 8px;
+    text-align: center;
+  }
+  footer {
+    padding: 20px 0;
+    font-size: 0.78rem;
+  }
+
+  /* --- Privacy Badge --- */
+  .privacy-badge {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    text-align: center;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* --- Generic inline grid overrides --- */
+  div[style*="grid-template-columns: 1fr 1fr"],
+  div[style*="grid-template-columns:1fr 1fr"],
+  div[style*="grid-template-columns: repeat(3"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Fix inline flex buttons to stack */
+  div[style*="justify-content:flex-end"],
+  div[style*="justify-content:space-between"] {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Ensure buttons don't overflow */
+  .btn {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    word-break: break-word;
+  }
 }
 
 /* Document Upload Zone & Badges */
