@@ -105,9 +105,6 @@ function parseGroupMembers(rawMembers, leaderName = '') {
   };
 }
 
-// Initialize database
-db.initDatabase().catch(e => console.error('[DB Init]', e));
-
 const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -848,13 +845,23 @@ function parseJSONSafe(str) {
   }
 }
 
-server.listen(PORT, HOST, () => {
-  console.log(`=======================================================`);
-  console.log(`🚀 MLIC CHALLENGE Production Server running at:`);
-  console.log(`👉 http://${HOST}:${PORT}`);
-  console.log(`👉 Accessible via IP: http://<YOUR_SERVER_IP>:${PORT}`);
-  console.log(`👉 Engine: ${db.isPostgres ? 'PostgreSQL' : 'SQLite fallback (Set DATABASE_URL in .env for PostgreSQL)'}`);
-  console.log(`👉 Confidential Submissions -> Direct to DB`);
-  console.log(`👉 Attached Document Uploads -> /uploads/ Enabled`);
-  console.log(`=======================================================`);
-});
+async function startServer() {
+  try {
+    await db.initDatabase();
+  } catch (e) {
+    console.error('[DB Init]', e);
+  }
+
+  server.listen(PORT, HOST, () => {
+    console.log(`=======================================================`);
+    console.log(`🚀 MLIC CHALLENGE Production Server running at:`);
+    console.log(`👉 http://${HOST}:${PORT}`);
+    console.log(`👉 Accessible via IP: http://<YOUR_SERVER_IP>:${PORT}`);
+    console.log(`👉 Engine: ${db.isPostgres ? 'PostgreSQL' : 'SQLite fallback (Set DATABASE_URL in .env for PostgreSQL)'}`);
+    console.log(`👉 Confidential Submissions -> Direct to DB`);
+    console.log(`👉 Attached Document Uploads -> /uploads/ Enabled`);
+    console.log(`=======================================================`);
+  });
+}
+
+startServer();

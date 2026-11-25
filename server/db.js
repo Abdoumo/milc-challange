@@ -87,13 +87,24 @@ async function exec(sql) {
 async function initDatabase() {
   if (isPostgres) {
     try {
+      // Migrate existing tables first (ignoring 42P01 undefined_table on fresh DBs) before init_postgres.sql inserts run
+      const preMigrations = [
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS group_name VARCHAR(255) DEFAULT '';`,
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS group_members TEXT DEFAULT '';`,
+        `ALTER TABLE challenges ADD COLUMN IF NOT EXISTS competition_type VARCHAR(32) NOT NULL DEFAULT 'marketing_strategy';`,
+        `ALTER TABLE challenges ADD COLUMN IF NOT EXISTS is_open INT NOT NULL DEFAULT 1;`
+      ];
+      for (const sql of preMigrations) {
+        try {
+          await pgPool.query(sql);
+        } catch (migErr) {
+          if (migErr.code !== '42P01') throw migErr;
+        }
+      }
+
       const schemaPath = path.join(__dirname, '..', 'database', 'init_postgres.sql');
       const schemaSql = fs.readFileSync(schemaPath, 'utf8');
       await pgPool.query(schemaSql);
-      await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS group_name VARCHAR(255) DEFAULT '';`);
-      await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS group_members TEXT DEFAULT '';`);
-      await pgPool.query(`ALTER TABLE challenges ADD COLUMN IF NOT EXISTS competition_type VARCHAR(32) NOT NULL DEFAULT 'marketing_strategy';`);
-      await pgPool.query(`ALTER TABLE challenges ADD COLUMN IF NOT EXISTS is_open INT NOT NULL DEFAULT 1;`);
       console.log('[Database] PostgreSQL tables and indexes verified successfully.');
     } catch (err) {
       console.error('[Database] PostgreSQL initialization error:', err.message);

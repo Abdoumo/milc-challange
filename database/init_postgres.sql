@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE users ADD COLUMN IF NOT EXISTS group_name VARCHAR(255) DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS group_members TEXT DEFAULT '';
+
 CREATE TABLE IF NOT EXISTS challenges (
     id VARCHAR(64) PRIMARY KEY,
     competition_type VARCHAR(32) NOT NULL DEFAULT 'marketing_strategy', -- 'marketing_strategy' | 'theme_idea'
@@ -30,6 +33,9 @@ CREATE TABLE IF NOT EXISTS challenges (
     is_open INT DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE challenges ADD COLUMN IF NOT EXISTS competition_type VARCHAR(32) NOT NULL DEFAULT 'marketing_strategy';
+ALTER TABLE challenges ADD COLUMN IF NOT EXISTS is_open INT NOT NULL DEFAULT 1;
 
 CREATE TABLE IF NOT EXISTS submissions (
     id VARCHAR(64) PRIMARY KEY,
